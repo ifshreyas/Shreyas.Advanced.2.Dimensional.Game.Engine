@@ -1,0 +1,4 @@
+C:\Users\patha\Documents\Game Development\Shreyas's Advanced 2-Dimensional Game Engine\SA2DGE\Engine\SA2DGE.Engine\obj\Debug\net8.0\SA2DGE.Engine.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\patha\Documents\Game Development\Shreyas's Advanced 2-Dimensional Game Engine\SA2DGE\Engine\SA2DGE.Engine\obj\Debug\net8.0\SA2DGE.Engine.AssemblyInfoInputs.cache
+C:\Users\patha\Documents\Game Development\Shreyas's Advanced 2-Dimensional Game Engine\SA2DGE\Engine\SA2DGE.Engine\obj\Debug\net8.0\SA2DGE.Engine.AssemblyInfo.cs
+C:\Users\patha\Documents\Game Development\Shreyas's Advanced 2-Dimensional Game Engine\SA2DGE\Engine\SA2DGE.Engine\obj\Debug\net8.0\SA2DGE.Engine.csproj.CoreCompileInputs.cache
