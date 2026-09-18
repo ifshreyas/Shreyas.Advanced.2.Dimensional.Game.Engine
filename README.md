@@ -1,6 +1,6 @@
 # 🎮 SA2DGE
 
-## Shreyas's Advanced 2D Game Engine
+## Shreyas's Advanced 2 Dimensional Game Engine
 
 SA2DGE is a personal **2D game engine project built from scratch in C#**. The purpose of the project is not simply to make a framework capable of running a game, but to understand what actually happens inside a game engine and how its different systems work together. The engine is being developed from the foundation upward, with each subsystem studied, designed, implemented, tested, and connected to the rest of the engine. The long-term goal is to create a complete and usable 2D game engine while learning the engineering behind game development, graphics, architecture, mathematics, memory, resources, physics, audio, and other systems along the way.
 
