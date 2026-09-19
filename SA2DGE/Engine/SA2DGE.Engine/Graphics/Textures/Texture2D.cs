@@ -206,7 +206,7 @@ public sealed class Texture2D : Texture
 
     private static byte ToByte(float value)
     {
-        return (byte)Math.Clamp(
+        return (byte)System.Math.Clamp(
             value * 255.0f,
             0.0f,
             255.0f);

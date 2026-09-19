@@ -29,10 +29,10 @@ public readonly struct Color : IEquatable<Color>
         float b,
         float a = 1.0f)
     {
-        R = Math.Clamp(r, 0.0f, 1.0f);
-        G = Math.Clamp(g, 0.0f, 1.0f);
-        B = Math.Clamp(b, 0.0f, 1.0f);
-        A = Math.Clamp(a, 0.0f, 1.0f);
+        R = System.Math.Clamp(r, 0.0f, 1.0f);
+        G = System.Math.Clamp(g, 0.0f, 1.0f);
+        B = System.Math.Clamp(b, 0.0f, 1.0f);
+        A = System.Math.Clamp(a, 0.0f, 1.0f);
     }
 
     public Color(

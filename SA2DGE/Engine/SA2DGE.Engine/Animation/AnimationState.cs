@@ -31,7 +31,7 @@ public sealed class AnimationState
 
             return Clip.Loop
                 ? frame % Clip.FrameCount
-                : Math.Min(
+                : System.Math.Min(
                     frame,
                     Clip.FrameCount - 1);
         }

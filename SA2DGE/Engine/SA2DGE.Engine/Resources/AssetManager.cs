@@ -70,18 +70,21 @@ public sealed class AssetManager : IDisposable
         _cache.Add(asset);
     }
 
-    public T Get<T>(AssetHandle<T> handle)
+    public T Get<T>(
+        AssetHandle<T> handle)
         where T : Asset
     {
         ThrowIfDisposed();
 
-        if (!_cache.TryGet(handle, out T? asset))
+        if (!_cache.TryGet(
+                handle,
+                out T? asset))
         {
             throw new KeyNotFoundException(
                 $"Asset '{handle.Id}' was not found.");
         }
 
-        return asset;
+        return asset!;
     }
 
     public bool TryGet<T>(

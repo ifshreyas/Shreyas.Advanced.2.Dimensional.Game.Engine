@@ -99,7 +99,7 @@ public static unsafe class NativeMemory
                 nameof(pointer));
         }
 
-        NativeMemory.Clear(
+        System.Runtime.InteropServices.NativeMemory.Clear(
             (void*)pointer,
             byteCount);
     }
@@ -140,9 +140,8 @@ public static unsafe class NativeMemory
             throw new ArgumentNullException(
                 nameof(pointer));
         }
-
-        return ref Marshal.PtrToStructure<T>(
-            pointer)!;
+        
+        return ref *(T*)pointer;
     }
 
     public static nint GetFunctionPointer(

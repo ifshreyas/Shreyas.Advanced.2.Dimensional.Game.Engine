@@ -2,15 +2,21 @@ namespace SA2DGE.Engine.Platform.Window;
 
 public sealed class Window : IDisposable
 {
-    private bool _isOpen;
+    private readonly IWindowBackend _backend;
 
-    public string Title { get; private set; }
+    private bool _disposed;
 
-    public int Width { get; private set; }
+    public string Title =>
+        _backend.Title;
 
-    public int Height { get; private set; }
+    public int Width =>
+        _backend.Width;
 
-    public bool IsOpen => _isOpen;
+    public int Height =>
+        _backend.Height;
+
+    public bool IsOpen =>
+        _backend.IsOpen;
 
     public bool VSync { get; private set; }
 
@@ -19,67 +25,141 @@ public sealed class Window : IDisposable
     public bool Fullscreen { get; private set; }
 
     public bool Borderless { get; private set; }
+    
+    internal nint NativeHandle =>
+        _backend.NativeHandle;
 
-    public Window(WindowConfig config)
+    public Window(
+        WindowConfig config)
     {
         ArgumentNullException.ThrowIfNull(config);
 
-        Title = config.Title;
-        Width = config.Width;
-        Height = config.Height;
         VSync = config.VSync;
         Resizable = config.Resizable;
         Fullscreen = config.Fullscreen;
         Borderless = config.Borderless;
 
-        _isOpen = false;
+        _backend = CreateBackend(config);
     }
 
     public void Open()
     {
-        if (_isOpen)
-        {
-            return;
-        }
+        ThrowIfDisposed();
 
-        _isOpen = true;
+        _backend.Open();
     }
 
     public void Close()
     {
-        if (!_isOpen)
+        if (_disposed)
         {
             return;
         }
 
-        _isOpen = false;
+        _backend.Close();
     }
 
-    public void Resize(int width, int height)
+    public void ProcessEvents()
     {
-        if (width <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(width));
-        }
+        ThrowIfDisposed();
 
-        if (height <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(height));
-        }
-
-        Width = width;
-        Height = height;
+        _backend.ProcessEvents();
     }
 
-    public void SetTitle(string title)
+    public void Resize(
+        int width,
+        int height)
     {
+        ThrowIfDisposed();
+
+        _backend.Resize(
+            width,
+            height);
+    }
+
+    public void SetTitle(
+        string title)
+    {
+        ThrowIfDisposed();
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
-        Title = title;
+        _backend.SetTitle(title);
     }
+
+    public void SetVSync(
+        bool enabled)
+    {
+        ThrowIfDisposed();
+
+        VSync = enabled;
+
+        _backend.SetVSync(
+            enabled);
+    }
+
+    public void SetResizable(
+        bool enabled)
+    {
+        ThrowIfDisposed();
+
+        Resizable = enabled;
+
+        _backend.SetResizable(
+            enabled);
+    }
+
+    public void SetFullscreen(
+        bool enabled)
+    {
+        ThrowIfDisposed();
+
+        Fullscreen = enabled;
+
+        _backend.SetFullscreen(
+            enabled);
+    }
+
+    public void SetBorderless(
+        bool enabled)
+    {
+        ThrowIfDisposed();
+
+        Borderless = enabled;
+
+        _backend.SetBorderless(
+            enabled);
+    }
+    
 
     public void Dispose()
     {
-        Close();
+        if (_disposed)
+        {
+            return;
+        }
+
+        _backend.Dispose();
+
+        _disposed = true;
+    }
+
+    private static IWindowBackend CreateBackend(
+        WindowConfig config)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return new WindowsWindowBackend(
+                config);
+        }
+
+        throw new PlatformNotSupportedException(
+            "No window backend is available for the current operating system.");
+    }
+
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(
+            _disposed,
+            this);
     }
 }

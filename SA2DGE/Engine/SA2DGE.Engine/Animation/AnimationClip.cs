@@ -130,7 +130,7 @@ public sealed class AnimationClip
         else
         {
             frameIndex =
-                Math.Min(
+                System.Math.Min(
                     frameIndex,
                     _frames.Count - 1);
         }

@@ -96,7 +96,7 @@ public sealed class UIInput : UIElement
 
         _text = text;
         CaretPosition =
-            Math.Clamp(
+            System.Math.Clamp(
                 CaretPosition,
                 0,
                 _text.Length);
@@ -183,7 +183,7 @@ public sealed class UIInput : UIElement
         }
 
         CaretPosition =
-            Math.Max(
+            System.Math.Max(
                 0,
                 CaretPosition - 1);
     }
@@ -196,7 +196,7 @@ public sealed class UIInput : UIElement
         }
 
         CaretPosition =
-            Math.Min(
+            System.Math.Min(
                 _text.Length,
                 CaretPosition + 1);
     }

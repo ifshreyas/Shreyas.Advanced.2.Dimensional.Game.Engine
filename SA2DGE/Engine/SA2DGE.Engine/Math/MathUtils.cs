@@ -33,7 +33,7 @@ public static class MathUtils
         int min,
         int max)
     {
-        return Math.Max(min, Math.Min(value, max));
+        return System.Math.Max(min, System.Math.Min(value, max));
     }
 
     public static float Lerp(

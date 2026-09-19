@@ -1,6 +1,6 @@
 namespace SA2DGE.Engine.Audio;
 
-public sealed class AudioEngine : IDisposable
+public class AudioEngine : IDisposable
 {
     private readonly List<AudioSource> _sources = new();
 
@@ -166,7 +166,7 @@ public sealed class AudioEngine : IDisposable
         ThrowIfDisposed();
 
         MasterVolume =
-            Math.Clamp(
+            System.Math.Clamp(
                 volume,
                 0.0f,
                 1.0f);

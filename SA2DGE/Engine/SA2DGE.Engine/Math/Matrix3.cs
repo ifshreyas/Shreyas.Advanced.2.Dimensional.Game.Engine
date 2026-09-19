@@ -117,11 +117,26 @@ public readonly struct Matrix3 : IEquatable<Matrix3>
 
     public override int GetHashCode()
     {
+        int first = HashCode.Combine(
+            M11,
+            M12,
+            M13);
+
+        int second = HashCode.Combine(
+            M21,
+            M22,
+            M23);
+
+        int third = HashCode.Combine(
+            M31,
+            M32,
+            M33);
+
         return HashCode.Combine(
-            M11, M12, M13,
-            M21, M22, M23,
-            M31, M32, M33);
-    }
+            first,
+            second,
+            third);
+    }   
 
     public static bool operator ==(Matrix3 left, Matrix3 right)
     {
