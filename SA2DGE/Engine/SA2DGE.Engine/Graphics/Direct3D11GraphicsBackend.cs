@@ -274,8 +274,8 @@ public sealed class Direct3D11GraphicsBackend : GraphicsBackend
         if (_context is not null)
         {
             _context.OMSetRenderTargets(
-                (ID3D11RenderTargetView?)null,
-                null!);
+                _renderTargetView!,
+                null);
         }
 
         _renderTargetView?.Dispose();

@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using SA2DGE.Engine.Platform.Window;
+
 
 namespace SA2DGE.Engine.Core;
 
@@ -38,8 +40,16 @@ public sealed class GameLoop
             {
                 _game.Window.ProcessEvents();
 
+                while (_game.Window.TryGetEvent(out WindowEvent windowEvent))
+                {
+                    _game.OnWindowEvent(windowEvent);
+                }
+
                 if (!_game.Window.IsOpen)
                     break;
+
+                _game.Input.BeginFrame();
+                _game.UpdateInput();
 
                 double frameDelta = _clock.Elapsed.TotalSeconds;
                 _clock.Restart();

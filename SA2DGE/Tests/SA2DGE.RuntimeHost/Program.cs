@@ -1,5 +1,7 @@
 ﻿using EngineRuntime = SA2DGE.Engine.Core.Engine;
 using SA2DGE.Engine.Core;
+using SA2DGE.Engine.Platform.Window;
+using SA2DGE.Engine.Platform.Input;
 
 internal sealed class RuntimeGame : Game
 {
@@ -15,7 +17,10 @@ internal sealed class RuntimeGame : Game
                 Fullscreen = false,
                 Borderless = false
             })
+    
+    
     {
+        
     }
 
     public override void Initialize()
@@ -27,22 +32,23 @@ internal sealed class RuntimeGame : Game
     public override void Update(
         float deltaTime)
     {
-        if (Console.KeyAvailable)
+        if (Input.Keyboard.IsPressed(InputKey.Escape))
         {
-            ConsoleKey key =
-                Console.ReadKey(
-                    true).Key;
-
-            if (key == ConsoleKey.Escape)
-            {
-                EngineRuntime.Stop();
-            }
+            EngineRuntime.Stop();
         }
     }
 
+    public override void OnWindowEvent(
+        WindowEvent windowEvent)
+    {
+        Console.WriteLine(
+            $"Window Event: {windowEvent.Type} " +
+            $"({windowEvent.Width}x{windowEvent.Height})");
+    }
+    
     public override void Render()
     {
-        Console.WriteLine("RENDER");
+        
 
         Graphics!.Clear(
             new SA2DGE.Engine.Math.Color(

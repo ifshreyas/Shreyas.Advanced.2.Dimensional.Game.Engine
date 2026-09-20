@@ -1,46 +1,75 @@
 namespace SA2DGE.Engine.Platform.Window;
 
-public sealed class WindowEvents
+public enum WindowEventType
 {
-    public event Action? Closed;
+    None = 0,
+    CloseRequested,
+    Closed,
+    Resized,
+    FocusGained,
+    FocusLost,
+    Minimized,
+    Restored
+}
 
-    public event Action<int, int>? Resized;
+public readonly struct WindowEvent
+{
+    public WindowEventType Type { get; }
 
-    public event Action? FocusGained;
+    public int Width { get; }
 
-    public event Action? FocusLost;
+    public int Height { get; }
 
-    public event Action? Minimized;
-
-    public event Action? Restored;
-
-    internal void RaiseClosed()
+    public WindowEvent(
+        WindowEventType type,
+        int width = 0,
+        int height = 0)
     {
-        Closed?.Invoke();
+        Type = type;
+        Width = width;
+        Height = height;
     }
 
-    internal void RaiseResized(int width, int height)
+    public static WindowEvent CloseRequested()
     {
-        Resized?.Invoke(width, height);
+        return new WindowEvent(WindowEventType.CloseRequested);
     }
 
-    internal void RaiseFocusGained()
+    public static WindowEvent Closed()
     {
-        FocusGained?.Invoke();
+        return new WindowEvent(WindowEventType.Closed);
     }
 
-    internal void RaiseFocusLost()
+    public static WindowEvent Resized(int width, int height)
     {
-        FocusLost?.Invoke();
+        return new WindowEvent(
+            WindowEventType.Resized,
+            width,
+            height);
     }
 
-    internal void RaiseMinimized()
+    public static WindowEvent FocusGained()
     {
-        Minimized?.Invoke();
+        return new WindowEvent(WindowEventType.FocusGained);
     }
 
-    internal void RaiseRestored()
+    public static WindowEvent FocusLost()
     {
-        Restored?.Invoke();
+        return new WindowEvent(WindowEventType.FocusLost);
+    }
+
+    public static WindowEvent Minimized()
+    {
+        return new WindowEvent(WindowEventType.Minimized);
+    }
+
+    public static WindowEvent Restored(
+        int width,
+        int height)
+    {
+        return new WindowEvent(
+            WindowEventType.Restored,
+            width,
+            height);
     }
 }

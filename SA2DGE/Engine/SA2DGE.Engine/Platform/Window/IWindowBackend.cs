@@ -18,22 +18,17 @@ public interface IWindowBackend : IDisposable
 
     void ProcessEvents();
 
-    void Resize(
-        int width,
-        int height);
+    bool TryGetEvent(out WindowEvent windowEvent);
 
-    void SetTitle(
-        string title);
+    void Resize(int width, int height);
 
-    void SetVSync(
-        bool enabled);
+    void SetTitle(string title);
 
-    void SetResizable(
-        bool enabled);
+    void SetVSync(bool enabled);
 
-    void SetFullscreen(
-        bool enabled);
+    void SetResizable(bool enabled);
 
-    void SetBorderless(
-        bool enabled);
+    void SetFullscreen(bool enabled);
+
+    void SetBorderless(bool enabled);
 }

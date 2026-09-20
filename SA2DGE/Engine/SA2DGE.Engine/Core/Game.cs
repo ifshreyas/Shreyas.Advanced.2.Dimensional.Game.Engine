@@ -1,5 +1,7 @@
-using SA2DGE.Engine.Platform.Window;
 using SA2DGE.Engine.Graphics;
+using SA2DGE.Engine.Platform.Input;
+using SA2DGE.Engine.Platform.Window;
+
 namespace SA2DGE.Engine.Core;
 
 public abstract class Game : IDisposable
@@ -8,8 +10,12 @@ public abstract class Game : IDisposable
     private bool _shutdown;
     private bool _disposed;
 
+    private IInputBackend? _inputBackend;
+
     public Window Window { get; }
-    
+
+    public Input Input { get; }
+
     public GraphicsBackend? Graphics { get; private set; }
 
     public bool IsInitialized =>
@@ -18,13 +24,12 @@ public abstract class Game : IDisposable
     public bool IsShutdown =>
         _shutdown;
 
-    protected Game(
-        WindowConfig? windowConfig = null)
+    protected Game(WindowConfig? windowConfig = null)
     {
-        Window =
-            new Window(
-                windowConfig ??
-                new WindowConfig());
+        Window = new Window(
+            windowConfig ?? new WindowConfig());
+
+        Input = new Input();
     }
 
     public virtual void Initialize()
@@ -44,25 +49,35 @@ public abstract class Game : IDisposable
     {
     }
 
+    public virtual void OnWindowEvent(
+        WindowEvent windowEvent)
+    {
+    }
+
+    internal void UpdateInput()
+    {
+        _inputBackend?.Update(Input);
+    }
+
     internal void InitializeRuntime()
     {
         ThrowIfDisposed();
 
         if (_initialized)
-        {
             return;
-        }
 
         Window.Open();
-        
-        Graphics =
-            new Direct3D11GraphicsBackend();
-
-        Graphics.Initialize(
-            Window);
 
         try
         {
+            _inputBackend = CreateInputBackend();
+            _inputBackend.Initialize();
+
+            Graphics =
+                new Direct3D11GraphicsBackend();
+
+            Graphics.Initialize(Window);
+
             Initialize();
 
             _initialized = true;
@@ -70,17 +85,36 @@ public abstract class Game : IDisposable
         }
         catch
         {
+            Graphics?.Dispose();
+            Graphics = null;
+
+            _inputBackend?.Shutdown();
+            _inputBackend?.Dispose();
+            _inputBackend = null;
+
+            Input.Clear();
+
             Window.Close();
+
             throw;
         }
+    }
+
+    private static IInputBackend CreateInputBackend()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return new WindowsInputBackend();
+        }
+
+        throw new PlatformNotSupportedException(
+            "No input backend is available for the current operating system.");
     }
 
     internal void ShutdownRuntime()
     {
         if (_shutdown)
-        {
             return;
-        }
 
         try
         {
@@ -90,6 +124,12 @@ public abstract class Game : IDisposable
         {
             Graphics?.Dispose();
             Graphics = null;
+
+            _inputBackend?.Shutdown();
+            _inputBackend?.Dispose();
+            _inputBackend = null;
+
+            Input.Clear();
 
             Window.Close();
 
@@ -101,9 +141,7 @@ public abstract class Game : IDisposable
     public void Dispose()
     {
         if (_disposed)
-        {
             return;
-        }
 
         ShutdownRuntime();
 

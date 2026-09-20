@@ -1,6 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 
+
 namespace SA2DGE.Engine.Platform.Window;
+
 
 public sealed class WindowsWindowBackend : IWindowBackend
 {
@@ -21,10 +23,14 @@ public sealed class WindowsWindowBackend : IWindowBackend
     private const uint WM_DESTROY = 0x0002;
     private const uint WM_SIZE = 0x0005;
     private const uint WM_QUIT = 0x0012;
+    
+    private const nuint SIZE_RESTORED = 0;
+    private const nuint SIZE_MINIMIZED = 1;
+    private const nuint SIZE_MAXIMIZED = 2;
 
     private const uint PM_REMOVE = 0x0001;
 
-    private const uint SIZE_MINIMIZED = 1;
+    
 
     private const uint SWP_NOMOVE = 0x0002;
     private const uint SWP_NOZORDER = 0x0004;
@@ -47,6 +53,7 @@ public sealed class WindowsWindowBackend : IWindowBackend
     private static bool _classRegistered;
 
     private readonly WindowConfig _config;
+    private readonly Queue<WindowEvent> _events = new();
 
     private nint _windowHandle;
     private nint _moduleHandle;
@@ -198,6 +205,20 @@ public sealed class WindowsWindowBackend : IWindowBackend
             DispatchMessage(
                 ref message);
         }
+    }
+    
+    public bool TryGetEvent(out WindowEvent windowEvent)
+    {
+        ThrowIfDisposed();
+
+        if (_events.Count == 0)
+        {
+            windowEvent = default;
+            return false;
+        }
+
+        windowEvent = _events.Dequeue();
+        return true;
     }
 
     public void Resize(
@@ -432,84 +453,112 @@ public sealed class WindowsWindowBackend : IWindowBackend
     }
 
     private static nint WindowProcedure(
-        nint windowHandle,
-        uint message,
-        nuint wParam,
-        nint lParam)
+    nint windowHandle,
+    uint message,
+    nuint wParam,
+    nint lParam)
+{
+    WindowsWindowBackend? backend = null;
+
+    nint userData = GetWindowLongPtr(
+        windowHandle,
+        GWLP_USERDATA);
+
+    if (userData != nint.Zero)
     {
-        WindowsWindowBackend? backend = null;
-
-        nint userData =
-            GetWindowLongPtr(
-                windowHandle,
-                GWLP_USERDATA);
-
-        if (userData != nint.Zero)
-        {
-            GCHandle handle =
-                GCHandle.FromIntPtr(userData);
-
-            backend =
-                handle.Target as WindowsWindowBackend;
-        }
-
-        switch (message)
-        {
-            case WM_CLOSE:
-            {
-                DestroyWindow(
-                    windowHandle);
-
-                return nint.Zero;
-            }
-
-            case WM_SIZE:
-            {
-                if (backend is not null &&
-                    wParam != SIZE_MINIMIZED)
-                {
-                    long size =
-                        lParam.ToInt64();
-
-                    int width =
-                        (int)(size & 0xFFFF);
-
-                    int height =
-                        (int)((size >> 16) & 0xFFFF);
-
-                    if (width > 0 &&
-                        height > 0)
-                    {
-                        backend.Width =
-                            width;
-
-                        backend.Height =
-                            height;
-                    }
-                }
-
-                break;
-            }
-
-            case WM_DESTROY:
-            {
-                if (backend is not null)
-                {
-                    backend._open = false;
-                }
-
-                PostQuitMessage(0);
-
-                return nint.Zero;
-            }
-        }
-
-        return DefWindowProc(
-            windowHandle,
-            message,
-            wParam,
-            lParam);
+        GCHandle handle = GCHandle.FromIntPtr(userData);
+        backend = handle.Target as WindowsWindowBackend;
     }
+
+    switch (message)
+    {
+        case WM_CLOSE:
+        {
+            backend?._events.Enqueue(
+                WindowEvent.CloseRequested());
+
+            DestroyWindow(windowHandle);
+
+            return nint.Zero;
+        }
+
+        case WM_SIZE:
+        {
+            if (backend is null)
+                break;
+
+            long size = lParam.ToInt64();
+
+            int width = (int)(size & 0xFFFF);
+            int height = (int)((size >> 16) & 0xFFFF);
+
+            switch (wParam)
+            {
+                case SIZE_MINIMIZED:
+                    backend._events.Enqueue(
+                        WindowEvent.Minimized());
+
+                    break;
+
+                case SIZE_MAXIMIZED:
+                    if (width > 0 && height > 0)
+                    {
+                        backend.Width = width;
+                        backend.Height = height;
+
+                        backend._events.Enqueue(
+                            WindowEvent.Resized(
+                                width,
+                                height));
+                    }
+
+                    backend._events.Enqueue(
+                        WindowEvent.Restored(
+                            width,
+                            height));
+
+                    break;
+
+                case SIZE_RESTORED:
+                    if (width > 0 && height > 0)
+                    {
+                        backend.Width = width;
+                        backend.Height = height;
+
+                        backend._events.Enqueue(
+                            WindowEvent.Resized(
+                                width,
+                                height));
+                    }
+
+                    break;
+            }
+
+            break;
+        }
+
+        case WM_DESTROY:
+        {
+            if (backend is not null)
+            {
+                backend._open = false;
+
+                backend._events.Enqueue(
+                    WindowEvent.Closed());
+            }
+
+            PostQuitMessage(0);
+
+            return nint.Zero;
+        }
+    }
+
+    return DefWindowProc(
+        windowHandle,
+        message,
+        wParam,
+        lParam);
+}
 
     [UnmanagedFunctionPointer(
         CallingConvention.Winapi)]
