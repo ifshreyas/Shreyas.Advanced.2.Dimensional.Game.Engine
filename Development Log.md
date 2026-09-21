@@ -6,31 +6,8 @@ The runtime lifecycle was also fully integrated through **Engine → Application
 
 The **Direct3D 11 graphics backend** is now successfully integrated with the runtime. D3D11 device creation, flip-model swap chain creation, basic rendering/present, and shutdown were verified without duplicate initialization. The complete runtime smoke test successfully demonstrated the full path from engine startup through input, window events, D3D11 rendering, and clean shutdown.
 
-### Current Runtime Flow
 
-```text
-Engine
-  ↓
-Application
-  ↓
-GameLoop
-  ├── Input
-  │    └── Keyboard
-  │         └── Windows Input Backend
-  │
-  ├── Game
-  │
-  ├── Window
-  │    └── Win32 Backend
-  │         └── Window Events
-  │
-  └── Graphics
-       └── Direct3D 11
-            └── Swap Chain
-
-
-
-# 📅 Stage 2.2 — Windows Platform Backend
+## 📅 Stage 2.2 — Windows Platform Backend
 
 Stage 2.2 focused on building and validating the **Windows platform backend** for SA2DGE. During this stage, the engine was connected to the native **Win32 API** through a platform-independent `Window` abstraction, allowing SA2DGE to create and manage a real Windows window without exposing Win32-specific code to the rest of the engine.
 
