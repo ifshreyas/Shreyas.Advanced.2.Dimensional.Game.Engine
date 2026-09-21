@@ -1,5 +1,7 @@
-﻿using SA2DGE.Engine.Math;
+﻿using SA2DGE.Engine.Graphics.Buffers;
+using SA2DGE.Engine.Math;
 using SA2DGE.Engine.Platform.Window;
+using SA2DGE.Engine.Graphics.Shaders;
 
 namespace SA2DGE.Engine.Graphics;
 
@@ -12,71 +14,56 @@ public abstract class GraphicsBackend : IDisposable
     public int Width { get; private set; }
 
     public int Height { get; private set; }
+    
+    public GraphicsCommands? Commands { get; protected set; }
+
+    public GraphicsResources? Resources { get; protected set; }
+    
+    public GraphicsShaders? Shaders { get; protected set; }
 
     protected GraphicsBackend()
     {
     }
 
-    public void Initialize(
-        Window window)
+    public void Initialize(Window window)
     {
         ThrowIfDisposed();
-
         ArgumentNullException.ThrowIfNull(window);
 
         if (IsInitialized)
-        {
             throw new InvalidOperationException(
                 "The graphics backend is already initialized.");
-        }
 
         Width = window.Width;
         Height = window.Height;
 
-        InitializeBackend(
-            window);
+        InitializeBackend(window);
 
         IsInitialized = true;
     }
 
-    public void Resize(
-        int width,
-        int height)
+    public void Resize(int width, int height)
     {
         ThrowIfDisposed();
+        EnsureInitialized();
 
-        if (!IsInitialized)
-        {
-            throw new InvalidOperationException(
-                "The graphics backend has not been initialized.");
-        }
+        ValidateSize(width, height);
 
-        ValidateSize(
-            width,
-            height);
-
-        if (width == Width &&
-            height == Height)
-        {
+        if (width == Width && height == Height)
             return;
-        }
 
-        ResizeBackend(
-            width,
-            height);
+        ResizeBackend(width, height);
 
         Width = width;
         Height = height;
     }
 
-    public void Clear(
-        Color color)
+    public void Clear(Color color)
     {
         ThrowIfDisposed();
         EnsureInitialized();
 
-        ClearBackend(
-            color);
+        ClearBackend(color);
     }
 
     public void Present()
@@ -87,12 +74,102 @@ public abstract class GraphicsBackend : IDisposable
         PresentBackend();
     }
 
+    public VertexBuffer CreateVertexBuffer(
+        int vertexCount,
+        int vertexSize)
+    {
+        ThrowIfDisposed();
+        EnsureInitialized();
+
+        if (Resources is null)
+        {
+            throw new InvalidOperationException(
+                "Graphics resources are not available.");
+        }
+
+        return Resources.CreateVertexBuffer(
+            vertexCount,
+            vertexSize);
+    }
+    
+    public Shader CreateVertexShader(string source)
+    {
+        ThrowIfDisposed();
+        EnsureInitialized();
+
+        if (Shaders is null)
+        {
+            throw new InvalidOperationException(
+                "Graphics shaders are not available.");
+        }
+
+        return Shaders.CreateVertexShader(source);
+    }
+
+    public Shader CreateFragmentShader(string source)
+    {
+        ThrowIfDisposed();
+        EnsureInitialized();
+
+        if (Shaders is null)
+        {
+            throw new InvalidOperationException(
+                "Graphics shaders are not available.");
+        }
+
+        return Shaders.CreateFragmentShader(source);
+    }
+
+    public ShaderProgram CreateShaderProgram()
+    {
+        ThrowIfDisposed();
+        EnsureInitialized();
+
+        if (Shaders is null)
+        {
+            throw new InvalidOperationException(
+                "Graphics shaders are not available.");
+        }
+
+        return Shaders.CreateShaderProgram();
+    }
+
+    public IndexBuffer CreateIndexBuffer(
+        int indexCount,
+        int indexSizeInBytes = sizeof(uint))
+    {
+        ThrowIfDisposed();
+        EnsureInitialized();
+
+        if (Resources is null)
+        {
+            throw new InvalidOperationException(
+                "Graphics resources are not available.");
+        }
+
+        return Resources.CreateIndexBuffer(
+            indexCount,
+            indexSizeInBytes);
+    }
+
+    public VertexArray CreateVertexArray()
+    {
+        ThrowIfDisposed();
+        EnsureInitialized();
+
+        if (Resources is null)
+        {
+            throw new InvalidOperationException(
+                "Graphics resources are not available.");
+        }
+
+        return Resources.CreateVertexArray();
+    }
+
     public void Dispose()
     {
         if (_disposed)
-        {
             return;
-        }
 
         if (IsInitialized)
         {
@@ -106,18 +183,19 @@ public abstract class GraphicsBackend : IDisposable
             }
         }
 
+        Resources = null;
         _disposed = true;
     }
 
-    protected abstract void InitializeBackend(
-        Window window);
+    protected abstract void InitializeBackend(Window window);
+    
+    
 
     protected abstract void ResizeBackend(
         int width,
         int height);
 
-    protected abstract void ClearBackend(
-        Color color);
+    protected abstract void ClearBackend(Color color);
 
     protected abstract void PresentBackend();
 
@@ -129,6 +207,8 @@ public abstract class GraphicsBackend : IDisposable
         {
             throw new InvalidOperationException(
                 "The graphics backend has not been initialized.");
+            
+            
         }
     }
 

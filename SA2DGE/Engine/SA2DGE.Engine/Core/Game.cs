@@ -2,6 +2,7 @@ using SA2DGE.Engine.Graphics;
 using SA2DGE.Engine.Platform.Input;
 using SA2DGE.Engine.Platform.Window;
 
+
 namespace SA2DGE.Engine.Core;
 
 public abstract class Game : IDisposable
@@ -17,6 +18,12 @@ public abstract class Game : IDisposable
     public Input Input { get; }
 
     public GraphicsBackend? Graphics { get; private set; }
+    
+    public GraphicsCommands? GraphicsCommands =>
+        Graphics?.Commands;
+    
+    public GraphicsShaders? GraphicsShaders =>
+        Graphics?.Shaders;
 
     public bool IsInitialized =>
         _initialized;
@@ -49,9 +56,21 @@ public abstract class Game : IDisposable
     {
     }
 
-    public virtual void OnWindowEvent(
-        WindowEvent windowEvent)
+    public virtual void OnWindowEvent(WindowEvent windowEvent)
     {
+        if (windowEvent.Type == WindowEventType.Resized &&
+            windowEvent.Width > 0 &&
+            windowEvent.Height > 0)
+        {
+            if (Graphics is not null &&
+                (Graphics.Width != windowEvent.Width ||
+                 Graphics.Height != windowEvent.Height))
+            {
+                Graphics.Resize(
+                    windowEvent.Width,
+                    windowEvent.Height);
+            }
+        }
     }
 
     internal void UpdateInput()

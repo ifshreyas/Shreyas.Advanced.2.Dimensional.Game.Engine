@@ -35,6 +35,29 @@
           "buildMultiTargeting/_._": {}
         }
       },
+      "Vortice.D3DCompiler/3.8.3": {
+        "type": "package",
+        "dependencies": {
+          "SharpGen.Runtime": "2.4.2-beta",
+          "Vortice.DirectX": "3.8.3"
+        },
+        "compile": {
+          "lib/net10.0/Vortice.D3DCompiler.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Vortice.D3DCompiler.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "build/Vortice.D3DCompiler.props": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Vortice.D3DCompiler.props": {}
+        }
+      },
       "Vortice.Direct3D11/3.8.3": {
         "type": "package",
         "dependencies": {
@@ -159,6 +182,27 @@
         "sharpgen.runtime.com.nuspec"
       ]
     },
+    "Vortice.D3DCompiler/3.8.3": {
+      "sha512": "OmGPMhf/xnD8/HZ0ms1x7xSFyz+6e6mveCqhu0EioMFQYKJM35/ZVLLo+FIB5KpsrlqhM/jvYHYPAxu45YONGg==",
+      "type": "package",
+      "path": "vortice.d3dcompiler/3.8.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "build/Vortice.D3DCompiler.BindMapping.xml",
+        "build/Vortice.D3DCompiler.props",
+        "buildMultiTargeting/Vortice.D3DCompiler.props",
+        "lib/net10.0/Vortice.D3DCompiler.dll",
+        "lib/net10.0/Vortice.D3DCompiler.xml",
+        "lib/net8.0/Vortice.D3DCompiler.dll",
+        "lib/net8.0/Vortice.D3DCompiler.xml",
+        "lib/net9.0/Vortice.D3DCompiler.dll",
+        "lib/net9.0/Vortice.D3DCompiler.xml",
+        "vortice.d3dcompiler.3.8.3.nupkg.sha512",
+        "vortice.d3dcompiler.nuspec"
+      ]
+    },
     "Vortice.Direct3D11/3.8.3": {
       "sha512": "JgFUswu2mgrSwcd0KRF2AnfeE5VbMEgcicmxPD1g2yXyomPIHbnX3wldBNHPOzzD0URC1WJ/pO1ymfi3imZwvg==",
       "type": "package",
@@ -264,6 +308,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "Vortice.D3DCompiler >= 3.8.3",
       "Vortice.Direct3D11 >= 3.8.3"
     ]
   },
@@ -312,6 +357,10 @@
         "framework": "net10.0",
         "targetAlias": "net10.0",
         "dependencies": {
+          "Vortice.D3DCompiler": {
+            "target": "Package",
+            "version": "[3.8.3, )"
+          },
           "Vortice.Direct3D11": {
             "target": "Package",
             "version": "[3.8.3, )"

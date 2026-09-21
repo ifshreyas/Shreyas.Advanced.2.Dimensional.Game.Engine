@@ -33,6 +33,18 @@
           }
         }
       },
+      "Vortice.D3DCompiler/3.8.3": {
+        "dependencies": {
+          "SharpGen.Runtime": "2.4.2-beta",
+          "Vortice.DirectX": "3.8.3"
+        },
+        "runtime": {
+          "lib/net10.0/Vortice.D3DCompiler.dll": {
+            "assemblyVersion": "3.8.3.0",
+            "fileVersion": "3.8.3.0"
+          }
+        }
+      },
       "Vortice.Direct3D11/3.8.3": {
         "dependencies": {
           "SharpGen.Runtime": "2.4.2-beta",
@@ -80,6 +92,7 @@
       },
       "SA2DGE.Engine/1.0.0": {
         "dependencies": {
+          "Vortice.D3DCompiler": "3.8.3",
           "Vortice.Direct3D11": "3.8.3"
         },
         "runtime": {
@@ -110,6 +123,13 @@
       "sha512": "sha512-9lxDFMiepqo3lJQzMSjECCIONeCc2f3Drokgj6HtrTLZcJSftNgcLbD6/iXYj2iphkwgrZb1oLsDOZxoFZkawQ==",
       "path": "sharpgen.runtime.com/2.4.2-beta",
       "hashPath": "sharpgen.runtime.com.2.4.2-beta.nupkg.sha512"
+    },
+    "Vortice.D3DCompiler/3.8.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OmGPMhf/xnD8/HZ0ms1x7xSFyz+6e6mveCqhu0EioMFQYKJM35/ZVLLo+FIB5KpsrlqhM/jvYHYPAxu45YONGg==",
+      "path": "vortice.d3dcompiler/3.8.3",
+      "hashPath": "vortice.d3dcompiler.3.8.3.nupkg.sha512"
     },
     "Vortice.Direct3D11/3.8.3": {
       "type": "package",

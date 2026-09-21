@@ -2,6 +2,8 @@
 using SA2DGE.Engine.Core;
 using SA2DGE.Engine.Platform.Window;
 using SA2DGE.Engine.Platform.Input;
+using SA2DGE.Engine.Graphics.Buffers;
+using SA2DGE.Engine.Graphics.Shaders;
 
 internal sealed class RuntimeGame : Game
 {
@@ -25,8 +27,86 @@ internal sealed class RuntimeGame : Game
 
     public override void Initialize()
     {
+        Console.WriteLine("SA2DGE initialized.");
+
+        VertexBuffer vertexBuffer = Graphics!.CreateVertexBuffer(
+            vertexCount: 3,
+            vertexSize: 20);
+
+        IndexBuffer indexBuffer = Graphics.CreateIndexBuffer(
+            indexCount: 3);
+
+        VertexArray vertexArray = Graphics.CreateVertexArray();
+
+        Console.WriteLine("Graphics resources created successfully.");
+
+        vertexArray.Dispose();
+        indexBuffer.Dispose();
+        vertexBuffer.Dispose();
+
+        Console.WriteLine("Graphics resources disposed successfully.");
+        
+        const string vertexShaderSource = """
+                                          struct VSInput
+                                          {
+                                              float3 Position : POSITION;
+                                          };
+
+                                          struct VSOutput
+                                          {
+                                              float4 Position : SV_POSITION;
+                                          };
+
+                                          VSOutput main(VSInput input)
+                                          {
+                                              VSOutput output;
+
+                                              output.Position = float4(
+                                                  input.Position,
+                                                  1.0f);
+
+                                              return output;
+                                          }
+                                          """;
+
+        const string fragmentShaderSource = """
+                                            struct PSInput
+                                            {
+                                                float4 Position : SV_POSITION;
+                                            };
+
+                                            float4 main(PSInput input) : SV_TARGET
+                                            {
+                                                return float4(
+                                                    1.0f,
+                                                    0.0f,
+                                                    0.0f,
+                                                    1.0f);
+                                            }
+                                            """;
+
+        Shader vertexShader =
+            Graphics!.CreateVertexShader(vertexShaderSource);
+
+        Shader fragmentShader =
+            Graphics.CreateFragmentShader(fragmentShaderSource);
+
+        vertexShader.Compile();
+        fragmentShader.Compile();
+
+        ShaderProgram shaderProgram =
+            Graphics.CreateShaderProgram();
+
+        shaderProgram.Attach(vertexShader);
+        shaderProgram.Attach(fragmentShader);
+        shaderProgram.Link();
+
         Console.WriteLine(
-            "SA2DGE initialized.");
+            "D3D11 shaders compiled and linked successfully.");
+
+        shaderProgram.Dispose();
+        vertexShader.Dispose();
+        fragmentShader.Dispose();
     }
 
     public override void Update(
@@ -38,12 +118,12 @@ internal sealed class RuntimeGame : Game
         }
     }
 
-    public override void OnWindowEvent(
-        WindowEvent windowEvent)
+    public override void OnWindowEvent(WindowEvent windowEvent)
     {
+        base.OnWindowEvent(windowEvent);
+
         Console.WriteLine(
-            $"Window Event: {windowEvent.Type} " +
-            $"({windowEvent.Width}x{windowEvent.Height})");
+            $"Window Event: {windowEvent.Type} ({windowEvent.Width}x{windowEvent.Height})");
     }
     
     public override void Render()

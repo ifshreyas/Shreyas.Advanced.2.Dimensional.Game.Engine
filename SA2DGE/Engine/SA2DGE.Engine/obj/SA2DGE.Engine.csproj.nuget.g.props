@@ -14,5 +14,6 @@
   </ItemGroup>
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)vortice.direct3d11\3.8.3\build\Vortice.Direct3D11.props" Condition="Exists('$(NuGetPackageRoot)vortice.direct3d11\3.8.3\build\Vortice.Direct3D11.props')" />
+    <Import Project="$(NuGetPackageRoot)vortice.d3dcompiler\3.8.3\build\Vortice.D3DCompiler.props" Condition="Exists('$(NuGetPackageRoot)vortice.d3dcompiler\3.8.3\build\Vortice.D3DCompiler.props')" />
   </ImportGroup>
 </Project>

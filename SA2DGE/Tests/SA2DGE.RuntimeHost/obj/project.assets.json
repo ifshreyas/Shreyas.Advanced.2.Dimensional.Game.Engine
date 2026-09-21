@@ -35,6 +35,29 @@
           "buildMultiTargeting/_._": {}
         }
       },
+      "Vortice.D3DCompiler/3.8.3": {
+        "type": "package",
+        "dependencies": {
+          "SharpGen.Runtime": "2.4.2-beta",
+          "Vortice.DirectX": "3.8.3"
+        },
+        "compile": {
+          "lib/net10.0/Vortice.D3DCompiler.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Vortice.D3DCompiler.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "build/_._": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/_._": {}
+        }
+      },
       "Vortice.Direct3D11/3.8.3": {
         "type": "package",
         "dependencies": {
@@ -122,6 +145,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
         "dependencies": {
+          "Vortice.D3DCompiler": "3.8.3",
           "Vortice.Direct3D11": "3.8.3"
         },
         "compile": {
@@ -170,6 +194,27 @@
         "lib/netstandard2.1/SharpGen.Runtime.COM.dll",
         "sharpgen.runtime.com.2.4.2-beta.nupkg.sha512",
         "sharpgen.runtime.com.nuspec"
+      ]
+    },
+    "Vortice.D3DCompiler/3.8.3": {
+      "sha512": "OmGPMhf/xnD8/HZ0ms1x7xSFyz+6e6mveCqhu0EioMFQYKJM35/ZVLLo+FIB5KpsrlqhM/jvYHYPAxu45YONGg==",
+      "type": "package",
+      "path": "vortice.d3dcompiler/3.8.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "build/Vortice.D3DCompiler.BindMapping.xml",
+        "build/Vortice.D3DCompiler.props",
+        "buildMultiTargeting/Vortice.D3DCompiler.props",
+        "lib/net10.0/Vortice.D3DCompiler.dll",
+        "lib/net10.0/Vortice.D3DCompiler.xml",
+        "lib/net8.0/Vortice.D3DCompiler.dll",
+        "lib/net8.0/Vortice.D3DCompiler.xml",
+        "lib/net9.0/Vortice.D3DCompiler.dll",
+        "lib/net9.0/Vortice.D3DCompiler.xml",
+        "vortice.d3dcompiler.3.8.3.nupkg.sha512",
+        "vortice.d3dcompiler.nuspec"
       ]
     },
     "Vortice.Direct3D11/3.8.3": {
