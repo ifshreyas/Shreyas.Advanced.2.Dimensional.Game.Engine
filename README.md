@@ -24,28 +24,39 @@ This is a development direction rather than a rigid rule. Engine systems depend 
 
 SA2DGE made a major step forward today. The project structure and solution were established, the available SDK was migrated to **.NET 10**, and the runtime foundation was connected to a real Windows graphics backend using **Vortice D3D11/DXGI**. The core runtime systems including `Game`, `Application`, `Engine`, and `GameLoop` are now in place. The Windows native window backend was implemented, along with native memory utilities and the `GraphicsBackend` abstraction. The Direct3D 11 backend can now create a D3D11 device, initialize a flip-model swap chain, create the render target, clear the frame, and present it to the screen. We also verified the fixed 60 Hz timestep and proper runtime shutdown/disposal behavior. Most importantly, the runtime smoke test succeeded and a **red frame was actually rendered on the Windows window**, proving that SA2DGE has successfully reached the real graphics pipeline.
 
----
 
-## 🚀 Current Stage
-
-The runtime bootstrap is now **essentially complete**. We have proven that the engine can start, create its native window, initialize Direct3D 11, render a frame, present it, and shut down cleanly. This means we are no longer working only with engine architecture and placeholders — SA2DGE has a functioning native runtime foundation.
-
-The next stage is **Phase 2.2 — Windows Platform**. The focus will now move toward making the platform layer more complete and properly integrated instead of treating the native window as only a graphics bootstrap. This will establish the foundation needed for input, window events, resizing, lifecycle handling, and other platform services. After that, we will move into the input backend, strengthen the graphics backend, and eventually build the first real 2D renderer capable of drawing actual game objects and sprites.
 
 ---
 
-## 🧭 Next Path
+## 📅 Stage 2.1 — Runtime Foundation Checkpoint
 
-**Windows Platform → Input Backend → Graphics Backend → First Real 2D Renderer → Runtime Integration → Tests & Validation**
+Today SA2DGE completed the core runtime foundation from **input through platform integration to graphics validation**. The input system was implemented with `InputKey`, `Keyboard`, `Input`, `IInputBackend`, and `WindowsInputBackend`, providing current/previous key states and `IsDown()`, `IsPressed()`, and `IsReleased()` behavior. Input is now integrated into the game loop, allowing the game to process keyboard input through the engine itself, including using `Input.Keyboard.IsPressed(InputKey.Escape)` to stop the runtime.
 
-The next goal is simple:
+The runtime lifecycle was also fully integrated through **Engine → Application → GameLoop → Game**, with fixed 60 Hz updates, input processing, window event processing, rendering, shutdown, and resource cleanup. The Windows platform layer now handles native Win32 window creation, close, resize, minimize, maximize, restore, native handles, and window state tracking. The restore-event issue was fixed so restored windows correctly report their actual dimensions instead of `0x0`.
 
-> **Build the proper Windows platform layer on top of the runtime foundation we have already verified.**
+The **Direct3D 11 graphics backend** is now successfully integrated with the runtime. D3D11 device creation, flip-model swap chain creation, basic rendering/present, and shutdown were verified without duplicate initialization. The complete runtime smoke test successfully demonstrated the full path from engine startup through input, window events, D3D11 rendering, and clean shutdown.
 
-🔴 **Today:** SA2DGE successfully rendered its first real frame.  
-🟢 **Next:** Make the platform layer production-ready and continue toward the first real 2D renderer.
+### Current Runtime Flow
 
----
+```text
+Engine
+  ↓
+Application
+  ↓
+GameLoop
+  ├── Input
+  │    └── Keyboard
+  │         └── Windows Input Backend
+  │
+  ├── Game
+  │
+  ├── Window
+  │    └── Win32 Backend
+  │         └── Window Events
+  │
+  └── Graphics
+       └── Direct3D 11
+            └── Swap Chain
 
 ### SA2DGE
 
