@@ -9,7 +9,8 @@ public enum WindowEventType
     FocusGained,
     FocusLost,
     Minimized,
-    Restored
+    Restored,
+    MouseWheel
 }
 
 public readonly struct WindowEvent
@@ -20,27 +21,35 @@ public readonly struct WindowEvent
 
     public int Height { get; }
 
+    public int WheelDelta { get; }
+
     public WindowEvent(
         WindowEventType type,
         int width = 0,
-        int height = 0)
+        int height = 0,
+        int wheelDelta = 0)
     {
         Type = type;
         Width = width;
         Height = height;
+        WheelDelta = wheelDelta;
     }
 
     public static WindowEvent CloseRequested()
     {
-        return new WindowEvent(WindowEventType.CloseRequested);
+        return new WindowEvent(
+            WindowEventType.CloseRequested);
     }
 
     public static WindowEvent Closed()
     {
-        return new WindowEvent(WindowEventType.Closed);
+        return new WindowEvent(
+            WindowEventType.Closed);
     }
 
-    public static WindowEvent Resized(int width, int height)
+    public static WindowEvent Resized(
+        int width,
+        int height)
     {
         return new WindowEvent(
             WindowEventType.Resized,
@@ -50,17 +59,20 @@ public readonly struct WindowEvent
 
     public static WindowEvent FocusGained()
     {
-        return new WindowEvent(WindowEventType.FocusGained);
+        return new WindowEvent(
+            WindowEventType.FocusGained);
     }
 
     public static WindowEvent FocusLost()
     {
-        return new WindowEvent(WindowEventType.FocusLost);
+        return new WindowEvent(
+            WindowEventType.FocusLost);
     }
 
     public static WindowEvent Minimized()
     {
-        return new WindowEvent(WindowEventType.Minimized);
+        return new WindowEvent(
+            WindowEventType.Minimized);
     }
 
     public static WindowEvent Restored(
@@ -71,5 +83,13 @@ public readonly struct WindowEvent
             WindowEventType.Restored,
             width,
             height);
+    }
+
+    public static WindowEvent MouseWheel(
+        int wheelDelta)
+    {
+        return new WindowEvent(
+            WindowEventType.MouseWheel,
+            wheelDelta: wheelDelta);
     }
 }

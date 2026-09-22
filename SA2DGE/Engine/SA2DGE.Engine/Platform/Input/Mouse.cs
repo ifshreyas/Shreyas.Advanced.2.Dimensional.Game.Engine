@@ -1,39 +1,99 @@
-namespace SA2DGE.Engine.Platform.Input;
+﻿namespace SA2DGE.Engine.Platform.Input;
 
-public static class Mouse
+public sealed class Mouse
 {
-    public static float X => InputManager.MouseX;
+    private readonly bool[] _currentState;
+    private readonly bool[] _previousState;
 
-    public static float Y => InputManager.MouseY;
+    public float X { get; private set; }
+    public float Y { get; private set; }
+    
+    public float WheelDelta { get; private set; }
 
-    public static float DeltaX => InputManager.MouseDeltaX;
+    public float DeltaX { get; private set; }
+    public float DeltaY { get; private set; }
 
-    public static float DeltaY => InputManager.MouseDeltaY;
-
-    public static bool IsDown(MouseButton button)
+    internal Mouse()
     {
-        return InputManager.IsMouseButtonDown(button);
+        int buttonCount = Enum.GetValues<MouseButton>().Length;
+
+        _currentState = new bool[buttonCount];
+        _previousState = new bool[buttonCount];
+    }
+    
+    internal void AddWheelDelta(float delta)
+    {
+        WheelDelta += delta;
     }
 
-    public static bool IsPressed(MouseButton button)
+    public bool IsDown(MouseButton button)
     {
-        return InputManager.IsMouseButtonPressed(button);
+        return IsValidButton(button) &&
+               _currentState[(int)button];
     }
 
-    public static bool IsReleased(MouseButton button)
+    public bool IsPressed(MouseButton button)
     {
-        return InputManager.IsMouseButtonReleased(button);
+        return IsValidButton(button) &&
+               _currentState[(int)button] &&
+               !_previousState[(int)button];
     }
 
-    internal static void SetPosition(float x, float y)
+    public bool IsReleased(MouseButton button)
     {
-        InputManager.SetMousePosition(x, y);
+        return IsValidButton(button) &&
+               !_currentState[(int)button] &&
+               _previousState[(int)button];
     }
 
-    internal static void SetButtonState(
+    internal void BeginFrame()
+    {
+        Array.Copy(
+            _currentState,
+            _previousState,
+            _currentState.Length);
+
+        DeltaX = 0.0f;
+        DeltaY = 0.0f;
+        WheelDelta = 0.0f;
+    }
+
+    internal void SetPosition(float x, float y)
+    {
+        DeltaX = x - X;
+        DeltaY = y - Y;
+
+        X = x;
+        Y = y;
+    }
+
+    internal void SetButtonState(
         MouseButton button,
-        bool pressed)
+        bool isDown)
     {
-        InputManager.SetMouseButtonState(button, pressed);
+        if (!IsValidButton(button))
+            return;
+
+        _currentState[(int)button] = isDown;
+    }
+
+    internal void Clear()
+    {
+        Array.Clear(_currentState);
+        Array.Clear(_previousState);
+
+        X = 0.0f;
+        Y = 0.0f;
+        DeltaX = 0.0f;
+        DeltaY = 0.0f;
+        WheelDelta = 0.0f;
+    }
+
+    private bool IsValidButton(MouseButton button)
+    {
+        int index = (int)button;
+
+        return index >= 0 &&
+               index < _currentState.Length;
     }
 }

@@ -109,15 +109,61 @@ internal sealed class RuntimeGame : Game
         fragmentShader.Dispose();
     }
 
-    public override void Update(
-        float deltaTime)
+    public override void Update(float deltaTime)
     {
+        if (Input.Mouse.DeltaX != 0.0f ||
+            Input.Mouse.DeltaY != 0.0f)
+        {
+            Console.WriteLine(
+                $"Mouse Move: X={Input.Mouse.X}, Y={Input.Mouse.Y}, " +
+                $"DeltaX={Input.Mouse.DeltaX}, DeltaY={Input.Mouse.DeltaY}");
+        }
+
+        if (Input.Mouse.IsPressed(MouseButton.Left))
+        {
+            Console.WriteLine("LEFT MOUSE PRESSED");
+        }
+
+        if (Input.Mouse.IsDown(MouseButton.Left))
+        {
+            Console.WriteLine("LEFT MOUSE HELD");
+        }
+
+        if (Input.Mouse.IsReleased(MouseButton.Left))
+        {
+            Console.WriteLine("LEFT MOUSE RELEASED");
+        }
+
         if (Input.Keyboard.IsPressed(InputKey.Escape))
         {
-            EngineRuntime.Stop();
+            Engine.Stop();
+        }
+        
+        if (Input.Mouse.WheelDelta != 0.0f)
+        {
+            Console.WriteLine(
+                $"Mouse Wheel: {Input.Mouse.WheelDelta}");
+        }
+        
+        if (Gamepad.IsConnected)
+        {
+            Console.WriteLine(
+                $"Gamepad: " +
+                $"LX={Gamepad.LeftStickX:F2} " +
+                $"LY={Gamepad.LeftStickY:F2} " +
+                $"RX={Gamepad.RightStickX:F2} " +
+                $"RY={Gamepad.RightStickY:F2} " +
+                $"LT={Gamepad.LeftTrigger:F2} " +
+                $"RT={Gamepad.RightTrigger:F2}");
+
+            if (Gamepad.IsDown(GamepadButton.A))
+                Console.WriteLine("GAMEPAD A");
+
+            if (Gamepad.IsDown(GamepadButton.B))
+                Console.WriteLine("GAMEPAD B");
         }
     }
-
+    
     public override void OnWindowEvent(WindowEvent windowEvent)
     {
         base.OnWindowEvent(windowEvent);

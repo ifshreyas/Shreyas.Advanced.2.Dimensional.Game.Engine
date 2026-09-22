@@ -15,18 +15,21 @@ public sealed class Keyboard
 
     public bool IsDown(InputKey key)
     {
-        return _currentState[(int)key];
+        return IsValidKey(key) &&
+               _currentState[(int)key];
     }
 
     public bool IsPressed(InputKey key)
     {
-        return _currentState[(int)key] &&
+        return IsValidKey(key) &&
+               _currentState[(int)key] &&
                !_previousState[(int)key];
     }
 
     public bool IsReleased(InputKey key)
     {
-        return !_currentState[(int)key] &&
+        return IsValidKey(key) &&
+               !_currentState[(int)key] &&
                _previousState[(int)key];
     }
 
@@ -42,7 +45,7 @@ public sealed class Keyboard
         InputKey key,
         bool isDown)
     {
-        if (key == InputKey.Unknown)
+        if (!IsValidKey(key))
             return;
 
         _currentState[(int)key] = isDown;
@@ -52,5 +55,14 @@ public sealed class Keyboard
     {
         Array.Clear(_currentState);
         Array.Clear(_previousState);
+    }
+
+    private bool IsValidKey(InputKey key)
+    {
+        int index = (int)key;
+
+        return index >= 0 &&
+               index < _currentState.Length &&
+               key != InputKey.Unknown;
     }
 }

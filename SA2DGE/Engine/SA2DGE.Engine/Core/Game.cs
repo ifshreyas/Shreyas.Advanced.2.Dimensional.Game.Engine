@@ -58,6 +58,14 @@ public abstract class Game : IDisposable
 
     public virtual void OnWindowEvent(WindowEvent windowEvent)
     {
+        if (windowEvent.Type == WindowEventType.MouseWheel)
+        {
+            Input.AddMouseWheelDelta(
+                windowEvent.WheelDelta);
+
+            return;
+        }
+
         if (windowEvent.Type == WindowEventType.Resized &&
             windowEvent.Width > 0 &&
             windowEvent.Height > 0)
@@ -90,7 +98,7 @@ public abstract class Game : IDisposable
         try
         {
             _inputBackend = CreateInputBackend();
-            _inputBackend.Initialize();
+            _inputBackend.Initialize(Window);
 
             Graphics =
                 new Direct3D11GraphicsBackend();

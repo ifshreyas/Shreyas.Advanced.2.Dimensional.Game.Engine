@@ -14,6 +14,7 @@ public sealed class WindowsWindowBackend : IWindowBackend
     private const uint WS_THICKFRAME = 0x00040000;
     private const uint WS_MINIMIZEBOX = 0x00020000;
     private const uint WS_MAXIMIZEBOX = 0x00010000;
+    private const uint WM_MOUSEWHEEL = 0x020A;
 
     private const uint WS_EX_APPWINDOW = 0x00040000;
 
@@ -480,6 +481,21 @@ public sealed class WindowsWindowBackend : IWindowBackend
             DestroyWindow(windowHandle);
 
             return nint.Zero;
+        }
+        
+        case WM_MOUSEWHEEL:
+        {
+            if (backend is null)
+                break;
+
+            short wheelDelta =
+                unchecked((short)((wParam >> 16) & 0xFFFF));
+
+            backend._events.Enqueue(
+                WindowEvent.MouseWheel(
+                    wheelDelta));
+
+            break;
         }
 
         case WM_SIZE:
