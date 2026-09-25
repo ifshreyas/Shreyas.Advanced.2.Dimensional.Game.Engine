@@ -19,4 +19,30 @@ Stage 2.2 was validated through live window resizing, continuous rendering, even
 
 **Stage 2.2 — Windows Platform Backend: ✅ Complete**
 
-**Next: Stage 2.3 — Input Backend.**
+# 📅 SA2DGE — Stage 2.3
+
+## 🎮 Input Backend — Complete
+
+Stage 2.3 was focused on completing the input backend of SA2DGE so the engine can receive keyboard, mouse, and gamepad input through its own platform-independent input system instead of requiring game code to communicate directly with Windows APIs.
+
+We completed the keyboard system by using the `InputKey` abstraction together with current and previous keyboard states, allowing SA2DGE to detect when a key is held with `IsDown()`, pressed with `IsPressed()`, or released with `IsReleased()`. The Windows backend uses `GetAsyncKeyState` to read keyboard state and supports letters, numbers, arrows, modifier keys, navigation keys, lock keys, and F1–F12, and the press, hold, and release behavior was validated at runtime.
+
+We completed the mouse system by adding the `MouseButton` abstraction, current and previous button states, mouse position, movement delta, button press and release detection, and mouse-wheel input. The engine supports the left, right, middle, XButton1, and XButton2 buttons, while Windows `WM_MOUSEWHEEL` messages are converted into engine-level wheel input and the wheel delta is reset correctly each frame.
+
+We also corrected the mouse coordinate system so that the engine uses coordinates relative to the active window's client area instead of global screen coordinates. This was achieved by using `ScreenToClient`, allowing mouse positions to correctly correspond to the game window.
+
+We integrated the existing gamepad API with the Windows backend through XInput, allowing SA2DGE to detect controller connections and disconnections and read A, B, X, Y, shoulder, stick, Start, Back, and D-pad buttons, as well as both analog sticks and triggers. Analog stick values are normalized to approximately `-1.0` to `1.0`, while trigger values are normalized to `0.0` to `1.0`.
+
+We updated `IInputBackend` so the active `Window` is available to the input backend, connected the input lifecycle to the game and window initialization process, added proper gamepad cleanup during shutdown and disconnection, connected native mouse-wheel messages to the input system, and fixed a `Math` namespace collision by using `global::System.Math.Clamp` for input normalization.
+
+The final input flow is now Hardware → Windows Input Backend → SA2DGE Input System → Keyboard, Mouse, and Gamepad → Game, which keeps Windows-specific input implementation isolated from the rest of the engine.
+
+The complete input system was rebuilt and runtime-tested, confirming that keyboard press, hold, and release states, mouse movement and buttons, window-relative mouse coordinates, mouse-wheel input, and gamepad input are working correctly.
+
+Stage 2.3 is therefore officially complete, and SA2DGE now has a functional first version of its input layer that provides a clean foundation for future gameplay and engine systems.
+
+The next planned stage is **Stage 2.4 — Graphics Backend**, where we will continue organizing and strengthening the graphics abstraction between SA2DGE and Direct3D 11 before moving toward the first real 2D renderer with GPU resources, shaders, textures, sprites, cameras, and actual 2D drawing.
+
+**Stage 2.3 — Input Backend: ✅ Complete**
+
+**Next: Stage 2.4 — Graphics Backend.**
