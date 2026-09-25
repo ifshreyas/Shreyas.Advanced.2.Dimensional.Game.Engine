@@ -22,13 +22,11 @@ public abstract class VertexArray : IDisposable
         ArgumentNullException.ThrowIfNull(buffer);
 
         if (_vertexBuffers.Contains(buffer))
-        {
             return;
-        }
-
-        _vertexBuffers.Add(buffer);
 
         OnVertexBufferAdded(buffer);
+
+        _vertexBuffers.Add(buffer);
     }
 
     public void SetIndexBuffer(IndexBuffer buffer)

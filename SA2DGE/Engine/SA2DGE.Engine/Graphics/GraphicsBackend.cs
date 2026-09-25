@@ -31,15 +31,45 @@ public abstract class GraphicsBackend : IDisposable
         ArgumentNullException.ThrowIfNull(window);
 
         if (IsInitialized)
+        {
             throw new InvalidOperationException(
                 "The graphics backend is already initialized.");
+        }
 
-        Width = window.Width;
-        Height = window.Height;
+        ValidateSize(
+            window.Width,
+            window.Height);
 
-        InitializeBackend(window);
+        try
+        {
+            InitializeBackend(window);
 
-        IsInitialized = true;
+            Width = window.Width;
+            Height = window.Height;
+
+            IsInitialized = true;
+        }
+        catch
+        {
+            try
+            {
+                ShutdownBackend();
+            }
+            catch
+            {
+                // Preserve the original initialization exception.
+            }
+
+            Commands = null;
+            Resources = null;
+            Shaders = null;
+
+            Width = 0;
+            Height = 0;
+            IsInitialized = false;
+
+            throw;
+        }
     }
 
     public void Resize(int width, int height)

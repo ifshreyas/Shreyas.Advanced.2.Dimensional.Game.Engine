@@ -41,8 +41,8 @@ internal sealed class Direct3D11GraphicsCommands : GraphicsCommands
         _shaderProgram!.Use();
 
         _context.DrawIndexed(
-            (uint)indexCount,
-            (uint)startIndex,
+            checked((uint)indexCount),
+            checked((uint)startIndex),
             0);
     }
 
@@ -56,8 +56,8 @@ internal sealed class Direct3D11GraphicsCommands : GraphicsCommands
         _shaderProgram!.Use();
 
         _context.Draw(
-            (uint)vertexCount,
-            (uint)startVertex);
+            checked((uint)vertexCount),
+            checked((uint)startVertex));
     }
 
     protected override void ResetBackend()

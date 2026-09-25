@@ -2,7 +2,7 @@ using SA2DGE.Engine.Math;
 
 namespace SA2DGE.Engine.Graphics.Textures;
 
-public sealed class Texture2D : Texture
+public  class Texture2D : Texture
 {
     private byte[] _data;
 

@@ -26,6 +26,7 @@ internal sealed class RuntimeGame : Game
     }
 
     public override void Initialize()
+    
     {
         Console.WriteLine("SA2DGE initialized.");
 

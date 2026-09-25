@@ -9,7 +9,7 @@ internal sealed class Direct3D11ShaderProgram : ShaderProgram
     private Direct3D11VertexShader? _vertexShader;
     private Direct3D11FragmentShader? _fragmentShader;
 
-    private bool _linked;
+    
 
     public Direct3D11ShaderProgram(
         ID3D11DeviceContext context)
@@ -50,7 +50,7 @@ internal sealed class Direct3D11ShaderProgram : ShaderProgram
                     nameof(shader));
         }
 
-        _linked = false;
+        
     }
 
     protected override void OnLink()
@@ -79,7 +79,7 @@ internal sealed class Direct3D11ShaderProgram : ShaderProgram
                 "The attached fragment shader has not been compiled.");
         }
 
-        _linked = true;
+        
     }
 
     protected override void OnUse()
@@ -164,12 +164,12 @@ internal sealed class Direct3D11ShaderProgram : ShaderProgram
     {
         _vertexShader = null;
         _fragmentShader = null;
-        _linked = false;
+        
     }
 
     private void EnsureD3D11Linked()
     {
-        if (!_linked ||
+        if (!IsLinked ||
             _vertexShader is null ||
             _fragmentShader is null)
         {

@@ -74,12 +74,16 @@ internal sealed class Direct3D11GraphicsBackend : GraphicsBackend
     protected override void ClearBackend(Color color)
     {
         if (_context is null)
+        {
             throw new InvalidOperationException(
                 "The Direct3D 11 device context is not initialized.");
+        }
 
         if (_renderTargetView is null)
+        {
             throw new InvalidOperationException(
                 "The Direct3D 11 render target view is not initialized.");
+        }
 
         _context.OMSetRenderTargets(
             new ID3D11RenderTargetView[]
@@ -99,11 +103,13 @@ internal sealed class Direct3D11GraphicsBackend : GraphicsBackend
         _context.ClearRenderTargetView(
             _renderTargetView,
             new Vortice.Mathematics.Color4(
-                1.0f,
-                0.0f,
-                0.0f,
-                1.0f));
+                color.R,
+                color.G,
+                color.B,
+                color.A));
     }
+
+        
 
     protected override void PresentBackend()
     {

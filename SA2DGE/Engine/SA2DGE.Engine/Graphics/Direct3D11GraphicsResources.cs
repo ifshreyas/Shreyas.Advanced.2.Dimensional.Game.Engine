@@ -1,4 +1,5 @@
 ﻿using SA2DGE.Engine.Graphics.Buffers;
+using SA2DGE.Engine.Graphics.Textures;
 using Vortice.Direct3D11;
 
 namespace SA2DGE.Engine.Graphics;
@@ -46,5 +47,20 @@ internal sealed class Direct3D11GraphicsResources : GraphicsResources
         return new Direct3D11VertexArray(
             _device,
             _context);
+    }
+
+    public override Texture2D CreateTexture2D(
+        int width,
+        int height,
+        TextureFormat format,
+        ReadOnlySpan<byte> data = default)
+    {
+        return new Direct3D11Texture2D(
+            _device,
+            _context,
+            width,
+            height,
+            format,
+            data);
     }
 }

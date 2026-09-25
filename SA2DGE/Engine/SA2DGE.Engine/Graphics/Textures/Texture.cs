@@ -5,27 +5,19 @@ public abstract class Texture : IDisposable
     private bool _disposed;
 
     public int Width { get; }
-
     public int Height { get; }
 
-    public bool IsDisposed =>
-        _disposed;
-
-    protected Texture(
-        int width,
-        int height)
+    protected Texture(int width, int height)
     {
         if (width <= 0)
-        {
             throw new ArgumentOutOfRangeException(
-                nameof(width));
-        }
+                nameof(width),
+                "Texture width must be greater than zero.");
 
         if (height <= 0)
-        {
             throw new ArgumentOutOfRangeException(
-                nameof(height));
-        }
+                nameof(height),
+                "Texture height must be greater than zero.");
 
         Width = width;
         Height = height;
@@ -36,10 +28,9 @@ public abstract class Texture : IDisposable
         ThrowIfDisposed();
 
         if (slot < 0)
-        {
             throw new ArgumentOutOfRangeException(
-                nameof(slot));
-        }
+                nameof(slot),
+                "Texture slot cannot be negative.");
 
         OnBind(slot);
     }
@@ -47,49 +38,47 @@ public abstract class Texture : IDisposable
     public void Unbind()
     {
         ThrowIfDisposed();
-
         OnUnbind();
     }
 
-    public void SetData<T>(
-        ReadOnlySpan<T> data)
+    public void SetData<T>(ReadOnlySpan<T> data)
         where T : unmanaged
     {
         ThrowIfDisposed();
-
         OnSetData(data);
     }
 
-    protected abstract void OnBind(int slot);
-
-    protected abstract void OnUnbind();
-
-    protected virtual void OnSetData<T>(
-        ReadOnlySpan<T> data)
-        where T : unmanaged
+    protected virtual void OnBind(int slot)
     {
     }
 
-    public void Dispose()
+    protected virtual void OnUnbind()
     {
-        if (_disposed)
-        {
-            return;
-        }
+    }
 
-        OnDispose();
-
-        _disposed = true;
+    protected virtual void OnSetData<T>(ReadOnlySpan<T> data)
+        where T : unmanaged
+    {
     }
 
     protected virtual void OnDispose()
     {
     }
 
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        OnDispose();
+
+        GC.SuppressFinalize(this);
+    }
+
     protected void ThrowIfDisposed()
     {
-        ObjectDisposedException.ThrowIf(
-            _disposed,
-            this);
+        ObjectDisposedException.ThrowIf(_disposed, this);
     }
 }
