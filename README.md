@@ -26,6 +26,23 @@ The project is intentionally being developed incrementally, with each subsystem 
 
 **SA2DGE is ultimately an attempt to build a 2D game engine while simultaneously understanding the engineering principles behind one — from the moment the application starts, through the game loop and platform layer, through input and GPU communication, all the way to the final pixels appearing on the screen.**
 
+
+## 🛠️ Development Path
+
+SA2DGE is being developed from the lowest-level runtime foundations toward higher-level 2D game development systems. The development path begins with the core runtime and game loop, then moves through platform and window management, input, graphics and rendering, mathematics, resources, scenes and entities, ECS architecture, physics, animation, audio, UI, serialization, and eventually development tools and editor functionality. Each system is built on top of the foundations below it, allowing the engine to gradually evolve from a low-level runtime into a complete 2D game development framework.
+
+**Development Path:**  
+🎮 Game → ⚙️ Runtime → 🧠 Core → 🖥️ Platform → 🪟 Window → 🎮 Input → 🎨 Graphics → 🖌️ Renderer → 📐 Math → 📦 Resources → 🌍 Scene → 🧩 ECS → 💥 Physics → 🎞️ Animation → 🔊 Audio → 🖱️ UI → 💾 Serialization → 🛠️ Tools
+
+---
+
+## 💻 Technology Stack
+
+SA2DGE is currently being developed primarily with **C# and .NET**, providing the main language, runtime, project system, and development environment for the engine. The initial platform target is **Windows**, with the native **Win32 API** being used for window creation, window messages, platform events, and Windows-specific input functionality. The graphics backend is built around **Direct3D 11**, with **Vortice** providing the .NET bindings that allow C# code to communicate with Direct3D 11 and DXGI. **XInput** is used for the initial Windows gamepad implementation, while the engine's own abstractions keep these platform-specific technologies separated from higher-level game and engine code.
+
+**Current Stack:**  
+`C#` → `.NET` → `Win32` → `Direct3D 11 / DXGI` → `Vortice` → `XInput`
+
 ---
 
 ## 📖 Development Log
