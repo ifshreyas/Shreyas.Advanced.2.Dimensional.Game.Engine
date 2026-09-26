@@ -4,6 +4,7 @@ using SA2DGE.Engine.Platform.Window;
 using SA2DGE.Engine.Platform.Input;
 using SA2DGE.Engine.Graphics.Buffers;
 using SA2DGE.Engine.Graphics.Shaders;
+using SA2DGE.Engine.Graphics.Textures;
 
 internal sealed class RuntimeGame : Game
 {
@@ -108,6 +109,28 @@ internal sealed class RuntimeGame : Game
         shaderProgram.Dispose();
         vertexShader.Dispose();
         fragmentShader.Dispose();
+        
+        Texture2D texture = Graphics.CreateTexture2D(
+            width: 2,
+            height: 2,
+            format: TextureFormat.RGBA8,
+            data:
+            [
+                255, 0, 0, 255,
+                0, 255, 0, 255,
+                0, 0, 255, 255,
+                255, 255, 255, 255
+            ]);
+
+        Console.WriteLine(
+            "D3D11 texture created and uploaded successfully.");
+
+        texture.Dispose();
+
+        Console.WriteLine(
+            "D3D11 texture disposed successfully.");
+        
+        
     }
 
     public override void Update(float deltaTime)

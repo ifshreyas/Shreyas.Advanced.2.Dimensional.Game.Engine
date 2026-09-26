@@ -2,6 +2,7 @@
 using SA2DGE.Engine.Math;
 using SA2DGE.Engine.Platform.Window;
 using SA2DGE.Engine.Graphics.Shaders;
+using SA2DGE.Engine.Graphics.Textures;
 
 namespace SA2DGE.Engine.Graphics;
 
@@ -135,6 +136,28 @@ public abstract class GraphicsBackend : IDisposable
 
         return Shaders.CreateVertexShader(source);
     }
+    public Texture2D CreateTexture2D(
+        int width,
+        int height,
+        TextureFormat format,
+        ReadOnlySpan<byte> data = default)
+    {
+        ThrowIfDisposed();
+        EnsureInitialized();
+
+        if (Resources is null)
+        {
+            throw new InvalidOperationException(
+                "Graphics resources are not available.");
+        }
+
+        return Resources.CreateTexture2D(
+            width,
+            height,
+            format,
+            data);
+    }
+    
 
     public Shader CreateFragmentShader(string source)
     {
