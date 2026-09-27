@@ -4,226 +4,353 @@ using SA2DGE.Engine.Platform.Window;
 using SA2DGE.Engine.Platform.Input;
 using SA2DGE.Engine.Graphics.Buffers;
 using SA2DGE.Engine.Graphics.Shaders;
-using SA2DGE.Engine.Graphics.Textures;
+
+internal struct Vertex
+{
+public float PositionX;
+public float PositionY;
+public float PositionZ;
+
+
+public float ColorR;
+public float ColorG;
+public float ColorB;
+public float ColorA;
+
+public Vertex(
+    float positionX,
+    float positionY,
+    float positionZ,
+    float colorR,
+    float colorG,
+    float colorB,
+    float colorA)
+{
+    PositionX = positionX;
+    PositionY = positionY;
+    PositionZ = positionZ;
+
+    ColorR = colorR;
+    ColorG = colorG;
+    ColorB = colorB;
+    ColorA = colorA;
+}
+
+
+}
 
 internal sealed class RuntimeGame : Game
 {
-    public RuntimeGame()
-        : base(
-            new SA2DGE.Engine.Platform.Window.WindowConfig
-            {
-                Title = "SA2DGE Runtime Test",
-                Width = 1280,
-                Height = 720,
-                VSync = true,
-                Resizable = true,
-                Fullscreen = false,
-                Borderless = false
-            })
-    
-    
+    private VertexBuffer? _vertexBuffer;
+    private IndexBuffer? _indexBuffer;
+    private VertexArray? _vertexArray;
+
+    private Shader? _vertexShader;
+    private Shader? _fragmentShader;
+    private ShaderProgram? _shaderProgram;
+
+
+public RuntimeGame()
+    : base(
+        new SA2DGE.Engine.Platform.Window.WindowConfig
+        {
+            Title = "SA2DGE Stage 2.5",
+            Width = 1280,
+            Height = 720,
+            VSync = true,
+            Resizable = true,
+            Fullscreen = false,
+            Borderless = false
+        })
+{
+}
+
+public override void Initialize()
+{
+    Console.WriteLine("SA2DGE initialized.");
+
+    /*
+     * Vertex layout:
+     *
+     * Position = Float3 = 12 bytes
+     * Color    = Float4 = 16 bytes
+     *
+     * Total vertex size = 28 bytes
+     */
+
+    Vertex[] vertices =
     {
-        
-    }
+        new Vertex(
+            -0.5f, -0.5f, 0.0f,
+            1.0f, 0.0f, 0.0f, 1.0f),
 
-    public override void Initialize()
-    
+        new Vertex(
+             0.5f, -0.5f, 0.0f,
+            0.0f, 1.0f, 0.0f, 1.0f),
+
+        new Vertex(
+            -0.5f,  0.5f, 0.0f,
+            0.0f, 0.0f, 1.0f, 1.0f),
+
+        new Vertex(
+             0.5f,  0.5f, 0.0f,
+            1.0f, 1.0f, 1.0f, 1.0f)
+    };
+
+    uint[] indices =
     {
-        Console.WriteLine("SA2DGE initialized.");
+        0, 2, 1,
+        2, 3, 1
+    };
 
-        VertexBuffer vertexBuffer = Graphics!.CreateVertexBuffer(
-            vertexCount: 3,
-            vertexSize: 20);
+    _vertexBuffer = Graphics!.CreateVertexBuffer(
+        vertexCount: 4,
+        vertexSize: 28);
 
-        IndexBuffer indexBuffer = Graphics.CreateIndexBuffer(
-            indexCount: 3);
+    _vertexBuffer.SetData(vertices);
 
-        VertexArray vertexArray = Graphics.CreateVertexArray();
+    _indexBuffer = Graphics.CreateIndexBuffer(
+        indexCount: 6);
 
-        Console.WriteLine("Graphics resources created successfully.");
+    _indexBuffer.SetData(indices);
 
-        vertexArray.Dispose();
-        indexBuffer.Dispose();
-        vertexBuffer.Dispose();
+    _vertexArray = Graphics.CreateVertexArray();
 
-        Console.WriteLine("Graphics resources disposed successfully.");
-        
-        const string vertexShaderSource = """
-                                          struct VSInput
-                                          {
-                                              float3 Position : POSITION;
-                                          };
+    _vertexArray.AddVertexBuffer(
+        _vertexBuffer);
 
-                                          struct VSOutput
-                                          {
-                                              float4 Position : SV_POSITION;
-                                          };
+    _vertexArray.SetIndexBuffer(
+        _indexBuffer);
 
-                                          VSOutput main(VSInput input)
-                                          {
-                                              VSOutput output;
+    /*
+     * Vertex layout:
+     *
+     * POSITION:
+     *   Float3
+     *   Offset = 0
+     *
+     * COLOR:
+     *   Float4
+     *   Offset = 12
+     */
 
-                                              output.Position = float4(
-                                                  input.Position,
-                                                  1.0f);
+    VertexLayout layout = new();
 
-                                              return output;
-                                          }
-                                          """;
+    layout.Add(
+        new VertexAttribute(
+            "POSITION",
+            0,
+            VertexAttributeType.Float3,
+            0));
 
-        const string fragmentShaderSource = """
-                                            struct PSInput
-                                            {
-                                                float4 Position : SV_POSITION;
-                                            };
+    layout.Add(
+        new VertexAttribute(
+            "COLOR",
+            0,
+            VertexAttributeType.Float4,
+            12));
 
-                                            float4 main(PSInput input) : SV_TARGET
-                                            {
-                                                return float4(
-                                                    1.0f,
-                                                    0.0f,
-                                                    0.0f,
-                                                    1.0f);
-                                            }
-                                            """;
+    Console.WriteLine(
+        $"Vertex layout created. Stride = {layout.Stride} bytes.");
 
-        Shader vertexShader =
-            Graphics!.CreateVertexShader(vertexShaderSource);
+    const string vertexShaderSource = """
+                                      struct VSInput
+                                      {
+                                          float3 Position : POSITION;
+                                          float4 Color : COLOR;
+                                      };
 
-        Shader fragmentShader =
-            Graphics.CreateFragmentShader(fragmentShaderSource);
+                                      struct VSOutput
+                                      {
+                                          float4 Position : SV_POSITION;
+                                          float4 Color : COLOR;
+                                      };
 
-        vertexShader.Compile();
-        fragmentShader.Compile();
+                                      VSOutput main(VSInput input)
+                                      {
+                                          VSOutput output;
 
-        ShaderProgram shaderProgram =
-            Graphics.CreateShaderProgram();
+                                          output.Position = float4(
+                                              input.Position,
+                                              1.0f);
 
-        shaderProgram.Attach(vertexShader);
-        shaderProgram.Attach(fragmentShader);
-        shaderProgram.Link();
+                                          output.Color = input.Color;
 
-        Console.WriteLine(
-            "D3D11 shaders compiled and linked successfully.");
+                                          return output;
+                                      }
+                                      """;
 
-        shaderProgram.Dispose();
-        vertexShader.Dispose();
-        fragmentShader.Dispose();
-        
-        Texture2D texture = Graphics.CreateTexture2D(
-            width: 2,
-            height: 2,
-            format: TextureFormat.RGBA8,
-            data:
-            [
-                255, 0, 0, 255,
-                0, 255, 0, 255,
-                0, 0, 255, 255,
-                255, 255, 255, 255
-            ]);
+    const string fragmentShaderSource = """
+                                        struct PSInput
+                                        {
+                                            float4 Position : SV_POSITION;
+                                            float4 Color : COLOR;
+                                        };
 
-        Console.WriteLine(
-            "D3D11 texture created and uploaded successfully.");
+                                        float4 main(PSInput input) : SV_TARGET
+                                        {
+                                            return input.Color;
+                                        }
+                                        """;
 
-        texture.Dispose();
+    _vertexShader =
+        Graphics.CreateVertexShader(
+            vertexShaderSource);
 
-        Console.WriteLine(
-            "D3D11 texture disposed successfully.");
-        
-        
-    }
+    _fragmentShader =
+        Graphics.CreateFragmentShader(
+            fragmentShaderSource);
 
-    public override void Update(float deltaTime)
-    {
-        if (Input.Mouse.DeltaX != 0.0f ||
-            Input.Mouse.DeltaY != 0.0f)
-        {
-            Console.WriteLine(
-                $"Mouse Move: X={Input.Mouse.X}, Y={Input.Mouse.Y}, " +
-                $"DeltaX={Input.Mouse.DeltaX}, DeltaY={Input.Mouse.DeltaY}");
-        }
+    _vertexShader.Compile();
+    _fragmentShader.Compile();
 
-        if (Input.Mouse.IsPressed(MouseButton.Left))
-        {
-            Console.WriteLine("LEFT MOUSE PRESSED");
-        }
+    _vertexArray!.SetLayout(
+        layout,
+        _vertexShader.Bytecode.Span);
 
-        if (Input.Mouse.IsDown(MouseButton.Left))
-        {
-            Console.WriteLine("LEFT MOUSE HELD");
-        }
+    _shaderProgram =
+        Graphics.CreateShaderProgram();
 
-        if (Input.Mouse.IsReleased(MouseButton.Left))
-        {
-            Console.WriteLine("LEFT MOUSE RELEASED");
-        }
+    _shaderProgram.Attach(_vertexShader);
+    _shaderProgram.Attach(_fragmentShader);
 
-        if (Input.Keyboard.IsPressed(InputKey.Escape))
-        {
-            Engine.Stop();
-        }
-        
-        if (Input.Mouse.WheelDelta != 0.0f)
-        {
-            Console.WriteLine(
-                $"Mouse Wheel: {Input.Mouse.WheelDelta}");
-        }
-        
-        if (Gamepad.IsConnected)
-        {
-            Console.WriteLine(
-                $"Gamepad: " +
-                $"LX={Gamepad.LeftStickX:F2} " +
-                $"LY={Gamepad.LeftStickY:F2} " +
-                $"RX={Gamepad.RightStickX:F2} " +
-                $"RY={Gamepad.RightStickY:F2} " +
-                $"LT={Gamepad.LeftTrigger:F2} " +
-                $"RT={Gamepad.RightTrigger:F2}");
+    _shaderProgram.Link();
 
-            if (Gamepad.IsDown(GamepadButton.A))
-                Console.WriteLine("GAMEPAD A");
+    Console.WriteLine(
+        "D3D11 shaders compiled and linked successfully.");
 
-            if (Gamepad.IsDown(GamepadButton.B))
-                Console.WriteLine("GAMEPAD B");
-        }
-    }
-    
-    public override void OnWindowEvent(WindowEvent windowEvent)
-    {
-        base.OnWindowEvent(windowEvent);
+    Console.WriteLine(
+        "Stage 2.5 graphics resources initialized.");
+}
 
-        Console.WriteLine(
-            $"Window Event: {windowEvent.Type} ({windowEvent.Width}x{windowEvent.Height})");
-    }
-    
-    public override void Render()
-    {
-        
-
-        Graphics!.Clear(
-            new SA2DGE.Engine.Math.Color(
-                255,
-                0,
-                0,
-                255));
-
-        Graphics.Present();
-    }
-
-    public override void Shutdown()
+public override void Update(float deltaTime)
+{
+    if (Input.Mouse.DeltaX != 0.0f ||
+        Input.Mouse.DeltaY != 0.0f)
     {
         Console.WriteLine(
-            "SA2DGE shutdown.");
+            $"Mouse Move: X={Input.Mouse.X}, Y={Input.Mouse.Y}, " +
+            $"DeltaX={Input.Mouse.DeltaX}, DeltaY={Input.Mouse.DeltaY}");
     }
+
+    if (Input.Mouse.IsPressed(MouseButton.Left))
+    {
+        Console.WriteLine("LEFT MOUSE PRESSED");
+    }
+
+    if (Input.Mouse.IsDown(MouseButton.Left))
+    {
+        Console.WriteLine("LEFT MOUSE HELD");
+    }
+
+    if (Input.Mouse.IsReleased(MouseButton.Left))
+    {
+        Console.WriteLine("LEFT MOUSE RELEASED");
+    }
+
+    if (Input.Keyboard.IsPressed(InputKey.Escape))
+    {
+        Engine.Stop();
+    }
+
+    if (Input.Mouse.WheelDelta != 0.0f)
+    {
+        Console.WriteLine(
+            $"Mouse Wheel: {Input.Mouse.WheelDelta}");
+    }
+
+    if (Gamepad.IsConnected)
+    {
+        Console.WriteLine(
+            $"Gamepad: " +
+            $"LX={Gamepad.LeftStickX:F2} " +
+            $"LY={Gamepad.LeftStickY:F2} " +
+            $"RX={Gamepad.RightStickX:F2} " +
+            $"RY={Gamepad.RightStickY:F2} " +
+            $"LT={Gamepad.LeftTrigger:F2} " +
+            $"RT={Gamepad.RightTrigger:F2}");
+
+        if (Gamepad.IsDown(GamepadButton.A))
+        {
+            Console.WriteLine("GAMEPAD A");
+        }
+
+        if (Gamepad.IsDown(GamepadButton.B))
+        {
+            Console.WriteLine("GAMEPAD B");
+        }
+    }
+}
+
+public override void OnWindowEvent(
+    WindowEvent windowEvent)
+{
+    base.OnWindowEvent(windowEvent);
+
+    Console.WriteLine(
+        $"Window Event: {windowEvent.Type} " +
+        $"({windowEvent.Width}x{windowEvent.Height})");
+}
+
+public override void Render()
+{
+    Graphics!.Clear(
+        new SA2DGE.Engine.Math.Color(
+            20,
+            20,
+            30,
+            255));
+
+    Graphics.Commands!.SetVertexArray(
+        _vertexArray!);
+
+    Graphics.Commands.SetShaderProgram(
+        _shaderProgram!);
+
+    Graphics.Commands.DrawIndexed(
+        indexCount: 6);
+
+    Graphics.Commands.Reset();
+
+    Graphics.Present();
+}
+
+public override void Shutdown()
+{
+    _shaderProgram?.Dispose();
+    _shaderProgram = null;
+
+    _vertexShader?.Dispose();
+    _vertexShader = null;
+
+    _fragmentShader?.Dispose();
+    _fragmentShader = null;
+
+    _vertexArray?.Dispose();
+    _vertexArray = null;
+
+    _indexBuffer?.Dispose();
+    _indexBuffer = null;
+
+    _vertexBuffer?.Dispose();
+    _vertexBuffer = null;
+
+    Console.WriteLine(
+        "SA2DGE shutdown.");
+}
+
+
 }
 
 internal static class Program
 {
-    private static void Main()
-    {
-        using RuntimeGame game =
-            new();
+private static void Main()
+{
+using RuntimeGame game = new();
 
-        EngineRuntime.Run(game);
-    }
+
+    EngineRuntime.Run(game);
+}
+
+
 }

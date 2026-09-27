@@ -11,7 +11,7 @@ internal sealed class Direct3D11FragmentShader : Shader
     private ID3D11PixelShader? _shader;
     private ReadOnlyMemory<byte> _bytecode;
 
-    public ReadOnlyMemory<byte> Bytecode =>
+    public override ReadOnlyMemory<byte> Bytecode =>
         _bytecode;
 
     public Direct3D11FragmentShader(

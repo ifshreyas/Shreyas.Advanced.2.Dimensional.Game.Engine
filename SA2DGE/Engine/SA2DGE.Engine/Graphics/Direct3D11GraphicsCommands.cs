@@ -1,5 +1,6 @@
 ﻿using SA2DGE.Engine.Graphics.Buffers;
 using SA2DGE.Engine.Graphics.Shaders;
+using Vortice.Direct3D;
 using Vortice.Direct3D11;
 
 namespace SA2DGE.Engine.Graphics;
@@ -39,6 +40,12 @@ internal sealed class Direct3D11GraphicsCommands : GraphicsCommands
 
         _vertexArray!.Bind();
         _shaderProgram!.Use();
+
+        // The vertex data represents triangles.
+        _context.IASetPrimitiveTopology(
+            Vortice.Direct3D.PrimitiveTopology.TriangleList);
+
+        
 
         _context.DrawIndexed(
             checked((uint)indexCount),

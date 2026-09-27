@@ -22,7 +22,7 @@ internal sealed class Direct3D11VertexArray : VertexArray
         _context = context;
     }
 
-    public void SetLayout(
+    protected override void SetLayoutBackend(
         VertexLayout layout,
         ReadOnlySpan<byte> vertexShaderBytecode)
     {

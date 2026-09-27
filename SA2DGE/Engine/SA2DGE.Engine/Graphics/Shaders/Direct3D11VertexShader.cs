@@ -12,7 +12,7 @@ internal sealed class Direct3D11VertexShader : Shader
 
     private ReadOnlyMemory<byte> _bytecode;
 
-    public ReadOnlyMemory<byte> Bytecode =>
+    public override ReadOnlyMemory<byte> Bytecode =>
         _bytecode;
 
     public Direct3D11VertexShader(

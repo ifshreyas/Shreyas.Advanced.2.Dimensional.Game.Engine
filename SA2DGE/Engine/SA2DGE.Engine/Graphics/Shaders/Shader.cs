@@ -1,5 +1,7 @@
 namespace SA2DGE.Engine.Graphics.Shaders;
 
+
+
 public abstract class Shader : IDisposable
 {
     private bool _disposed;
@@ -9,6 +11,8 @@ public abstract class Shader : IDisposable
     public bool IsCompiled { get; private set; }
 
     public string Source { get; }
+    
+    public abstract ReadOnlyMemory<byte> Bytecode { get; }
 
     protected Shader(
         ShaderType type,
@@ -71,6 +75,7 @@ public abstract class Shader : IDisposable
             this);
     }
 }
+
 
 public enum ShaderType
 {
