@@ -74,11 +74,17 @@ The most important result of this stage is that the **graphics foundation is now
 
 The next major goal is **Stage 2.5 — First Real 2D Renderer**, where SA2DGE will begin using the graphics backend to construct actual 2D geometry and send it through the shader pipeline. The renderer will build on the vertex buffers, index buffers, vertex arrays, shader programs, textures, and graphics commands completed in Stage 2.4, eventually allowing the engine to transform a simple sprite or textured quad from engine-level data into actual pixels displayed by the GPU.
 
-**Stage 2.4 — Graphics Backend: ✅ COMPLETE**
 
-# SA2DGE — Stage 2.5 Development Log
 
-Stage 2.5 was mainly focused on getting the first real GPU-rendered geometry working in SA2DGE and, more importantly, finding and solving the problems that were preventing the complete Direct3D 11 rendering pipeline from producing visible geometry.
+## Stage 2.5 — Graphics Backend Fixes
+
+Stage 2.5 focused on debugging, fixing, and validating bugs found in the Graphics Backend after Stage 2.4, ensuring the D3D11 foundation was stable and ready for actual rendering.
+
+
+
+# SA2DGE — Stage 2.6 Development Log
+
+Stage 2.6 was mainly focused on getting the first real GPU-rendered geometry working in SA2DGE and, more importantly, finding and solving the problems that were preventing the complete Direct3D 11 rendering pipeline from producing visible geometry.
 
 The first major problem was that the engine could successfully create the window, initialize Direct3D 11, create the swap chain, compile the shaders, and start the runtime, but the screen still showed only the clear color instead of the expected geometry. This created the main debugging problem of the stage because the individual systems appeared to be working while the complete rendering path was not producing visible triangles.
 
@@ -104,6 +110,8 @@ After these problems were solved, SA2DGE successfully reached the complete rende
 
 The final result of today's work is that SA2DGE has crossed an important boundary: it is no longer only capable of initializing Direct3D 11 and displaying a cleared framebuffer, but can now issue a real GPU draw call and produce visible geometry inside the engine window. The colorful rectangle produced during the test is the first proof that the complete SA2DGE geometry-rendering pipeline is functioning.
 
-**Stage 2.5 — D3D11 Basic Geometry Rendering: ✅ Complete**
+**Stage 2.6 — D3D11 Basic Geometry Rendering: ✅ Complete**
+
+**Next step:** build the higher-level 2D rendering functionality on top of this working GPU geometry pipeline.
 
 **Next step:** build the higher-level 2D rendering functionality on top of this working GPU geometry pipeline.*
