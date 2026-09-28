@@ -17,8 +17,6 @@ We also solved an important **Direct3D 11 resize issue** where the initial resiz
 
 Stage 2.2 was validated through live window resizing, continuous rendering, event propagation, window closing, and clean engine shutdown. This confirms that the **Windows platform layer and graphics resize path are now working together correctly**.
 
-**Stage 2.2 — Windows Platform Backend: ✅ Complete**
-
 # 📅 SA2DGE — Stage 2.3
 
 ## 🎮 Input Backend — Complete
