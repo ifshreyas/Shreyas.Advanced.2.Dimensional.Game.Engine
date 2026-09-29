@@ -4,7 +4,7 @@ Today SA2DGE completed the core runtime foundation from **input through platform
 
 The runtime lifecycle was also fully integrated through **Engine → Application → GameLoop → Game**, with fixed 60 Hz updates, input processing, window event processing, rendering, shutdown, and resource cleanup. The Windows platform layer now handles native Win32 window creation, close, resize, minimize, maximize, restore, native handles, and window state tracking. The restore-event issue was fixed so restored windows correctly report their actual dimensions instead of `0x0`.
 
-The **Direct3D 11 graphics backend** is now successfully integrated with the runtime. D3D11 device creation, flip-model swap chain creation, basic rendering/present, and shutdown were verified without duplicate initialization. The complete runtime smoke test successfully demonstrated the full path from engine startup through input, window events, D3D11 rendering, and clean shutdown.
+The **Direct3D 11 graphics backend** is now successfully integrated with the runtime. D3D11 device creation, flip-model swap chain creation, basic rendering/present, and shutdown were verified without duplicate initialization. The complete runtime smoke test successfully demonstrated the full path from engine startup through input, window events, D3D11 rendering, and clean done shutdown.
 
 
 ## 📅 Stage 2.2 — Windows Platform Backend
@@ -16,8 +16,6 @@ The window system now handles the complete native lifecycle, including creation,
 We also solved an important **Direct3D 11 resize issue** where the initial resize event could unnecessarily resize the graphics resources immediately after swap-chain creation. The graphics resize logic was corrected so that only actual dimension changes trigger `ResizeBuffers()` and render-target recreation.
 
 Stage 2.2 was validated through live window resizing, continuous rendering, event propagation, window closing, and clean engine shutdown. This confirms that the **Windows platform layer and graphics resize path are now working together correctly**.
-
-**Stage 2.2 — Windows Platform Backend: ✅ Complete**
 
 # 📅 SA2DGE — Stage 2.3
 
@@ -74,6 +72,44 @@ The most important result of this stage is that the **graphics foundation is now
 
 The next major goal is **Stage 2.5 — First Real 2D Renderer**, where SA2DGE will begin using the graphics backend to construct actual 2D geometry and send it through the shader pipeline. The renderer will build on the vertex buffers, index buffers, vertex arrays, shader programs, textures, and graphics commands completed in Stage 2.4, eventually allowing the engine to transform a simple sprite or textured quad from engine-level data into actual pixels displayed by the GPU.
 
-**Stage 2.4 — Graphics Backend: ✅ COMPLETE**
 
-**Next: Stage 2.5 — First Real 2D Renderer.**
+
+## Stage 2.5 — Graphics Backend Fixes
+
+Stage 2.5 focused on debugging, fixing, and validating bugs found in the Graphics Backend after Stage 2.4, ensuring the D3D11 foundation was stable and ready for actual rendering.
+
+
+
+# SA2DGE — Stage 2.6 Development Log
+
+Stage 2.6 was mainly focused on getting the first real GPU-rendered geometry working in SA2DGE and, more importantly, finding and solving the problems that were preventing the complete Direct3D 11 rendering pipeline from producing visible geometry.
+
+The first major problem was that the engine could successfully create the window, initialize Direct3D 11, create the swap chain, compile the shaders, and start the runtime, but the screen still showed only the clear color instead of the expected geometry. This created the main debugging problem of the stage because the individual systems appeared to be working while the complete rendering path was not producing visible triangles.
+
+We first verified that the problem was not related to the render target or presentation system by changing the clear color to a very obvious red color. The window successfully became red, proving that the D3D11 device, render target, clear operation, swap chain, and presentation path were working correctly. We then restored the normal dark-blue clear color and confirmed that the background continued to render correctly, allowing us to narrow the problem down to the actual geometry pipeline rather than the framebuffer or swap chain.
+
+The next issue we investigated was whether the shaders were actually being created correctly. The vertex layout reported a stride of 28 bytes, which matched the vertex structure containing a `Float3` position and a `Float4` color, and the vertex and pixel shaders successfully compiled and linked. This ruled out shader compilation and basic vertex-layout creation as the cause of the missing geometry.
+
+We then traced the actual rendering command path from the engine-level graphics API through `SetVertexArray()`, `SetShaderProgram()`, and `DrawIndexed()` into the Direct3D 11 graphics command implementation. This confirmed that the engine was no longer simply preparing graphics resources but was actually reaching the D3D11 device context and attempting to issue the indexed draw operation. The debugging therefore moved toward verifying the complete pipeline state required by the GPU for that draw call.
+
+Another important problem we solved was establishing the correct relationship between the vertex buffer, index buffer, input layout, vertex shader, pixel shader, and vertex array. The four test vertices contained position and color information with a total stride of 28 bytes, while the index buffer contained six indices that formed two triangles. The input layout was configured so that the GPU could correctly interpret the first 12 bytes of each vertex as `POSITION` and the following 16 bytes as `COLOR`. This ensured that the data being sent to the GPU matched what the HLSL shaders expected.
+
+We also implemented and connected the `VertexArray` abstraction so that the vertex buffer, index buffer, and input layout could be treated as a single rendering object. This prevented the runtime from having to manually manage every D3D11 binding and established the abstraction that the renderer can use for future geometry.
+
+The shader pipeline was also completed for this test. The vertex shader accepted the `POSITION` and `COLOR` attributes and passed them through to the rasterizer, while the pixel shader returned the interpolated color as the final pixel output. Because the test positions were already in normalized device coordinates, no camera or projection matrix was required for this first geometry test. This kept the pipeline intentionally simple and allowed us to focus on validating the GPU rendering path itself.
+
+We also verified the indexed drawing path and connected the engine-level `DrawIndexed()` command to the actual D3D11 `DrawIndexed()` call. This was an important architectural fix because the runtime does not directly access the D3D11 device context; instead, the request flows through the engine graphics abstraction into the Direct3D 11 backend and finally reaches the GPU.
+
+The resize path was also verified during this work so that changing the native window dimensions does not leave the graphics pipeline using an invalid render target. When a resize event occurs, the old render target is released, the D3D11 context is flushed, the swap-chain buffers are resized, the new back buffer is obtained, a new render-target view is created, and the viewport is updated. This keeps the rendering surface synchronized with the actual window dimensions.
+
+The main debugging process therefore consisted of isolating each part of the pipeline rather than changing everything at once. We first proved that clearing and presenting worked, then verified shader compilation and vertex-layout creation, then traced the draw command, and finally verified the relationship between the vertex data, index data, input layout, shader stages, vertex array, and D3D11 draw call. This allowed the black-screen problem to be narrowed down to the geometry rendering path instead of incorrectly changing the already-working window or swap-chain systems.
+
+After these problems were solved, SA2DGE successfully reached the complete rendering path from CPU-side vertex data through the GPU pipeline. The engine can now create the vertex and index buffers, configure the input layout, compile and bind the vertex and pixel shaders, bind the vertex array, issue an indexed draw call, render the resulting triangles into the render target, and present the result through the swap chain.
+
+The final result of today's work is that SA2DGE has crossed an important boundary: it is no longer only capable of initializing Direct3D 11 and displaying a cleared framebuffer, but can now issue a real GPU draw call and produce visible geometry inside the engine window. The colorful rectangle produced during the test is the first proof that the complete SA2DGE geometry-rendering pipeline is functioning.
+
+**Stage 2.6 — D3D11 Basic Geometry Rendering: ✅ Complete**
+
+**Next step:** build the higher-level 2D rendering functionality on top of this working GPU geometry pipeline.
+
+**Next step:** build the higher-level 2D rendering functionality on top of this working GPU geometry pipeline.*
