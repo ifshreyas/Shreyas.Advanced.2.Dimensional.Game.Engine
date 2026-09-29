@@ -44,16 +44,9 @@ public sealed class Sprite
     {
         SetTexture(texture);
 
-        if (size.HasValue)
-        {
-            Size = size.Value;
-        }
-        else
-        {
-            Size = new Vector2(
-                texture.Width,
-                texture.Height);
-        }
+        Size = size ?? new Vector2(
+            texture.Width,
+            texture.Height);
     }
 
     public Sprite(
@@ -63,16 +56,9 @@ public sealed class Sprite
     {
         SetRegion(region);
 
-        if (size.HasValue)
-        {
-            Size = size.Value;
-        }
-        else
-        {
-            Size = new Vector2(
-                region.Width,
-                region.Height);
-        }
+        Size = size ?? new Vector2(
+            region.Width,
+            region.Height);
     }
 
     public void SetTexture(Texture2D texture)

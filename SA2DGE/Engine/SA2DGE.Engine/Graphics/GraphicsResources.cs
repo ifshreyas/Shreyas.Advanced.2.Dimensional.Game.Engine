@@ -14,10 +14,15 @@ public abstract class GraphicsResources
         int indexSizeInBytes = sizeof(uint));
 
     public abstract VertexArray CreateVertexArray();
+    
+    
+    public abstract ConstantBuffer CreateConstantBuffer(
+        int sizeInBytes);
 
     public abstract Texture2D CreateTexture2D(
         int width,
         int height,
         TextureFormat format,
         ReadOnlySpan<byte> data = default);
+    
 }

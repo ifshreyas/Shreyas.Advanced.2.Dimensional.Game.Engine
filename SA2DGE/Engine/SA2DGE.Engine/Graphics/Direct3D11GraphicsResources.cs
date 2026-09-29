@@ -19,6 +19,14 @@ internal sealed class Direct3D11GraphicsResources : GraphicsResources
         _device = device;
         _context = context;
     }
+    
+    public override ConstantBuffer CreateConstantBuffer(
+        int sizeInBytes)
+    {
+        return new Direct3D11ConstantBuffer(
+            _device,
+            sizeInBytes);
+    }
 
     public override VertexBuffer CreateVertexBuffer(
         int vertexCount,

@@ -25,6 +25,24 @@ internal sealed class Direct3D11GraphicsCommands : GraphicsCommands
     {
         _vertexArray = vertexArray;
     }
+    
+    public override void SetVertexConstantBuffer(
+        int slot,
+        ConstantBuffer buffer)
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+
+        if (buffer is not Direct3D11ConstantBuffer d3dBuffer)
+        {
+            throw new ArgumentException(
+                "The constant buffer must be a Direct3D11 constant buffer.",
+                nameof(buffer));
+        }
+
+        _context.VSSetConstantBuffer(
+            checked((uint)slot),
+            d3dBuffer.NativeBuffer);
+    }
 
     protected override void SetShaderProgramBackend(
         ShaderProgram shaderProgram)
