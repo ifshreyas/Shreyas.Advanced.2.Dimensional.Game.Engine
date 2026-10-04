@@ -4,6 +4,8 @@ using SA2DGE.Engine.Platform.Window;
 using SA2DGE.Engine.Platform.Input;
 using SA2DGE.Engine.Graphics.Buffers;
 using SA2DGE.Engine.Graphics.Shaders;
+using SA2DGE.Engine.Graphics;
+using SA2DGE.Engine.Math;
 
 internal struct Vertex
 {
@@ -48,6 +50,7 @@ internal sealed class RuntimeGame : Game
     private Shader? _vertexShader;
     private Shader? _fragmentShader;
     private ShaderProgram? _shaderProgram;
+    private Direct3D11Renderer2D? _renderer;
 
 
 public RuntimeGame()
@@ -102,6 +105,13 @@ public override void Initialize()
         0, 2, 1,
         2, 3, 1
     };
+    
+    _renderer = new Direct3D11Renderer2D(Graphics!);
+    _renderer.Initialize();
+    
+   
+
+    Console.WriteLine("Stage 3 Renderer2D initialized.");
 
     _vertexBuffer = Graphics!.CreateVertexBuffer(
         vertexCount: 4,
@@ -210,6 +220,8 @@ public override void Initialize()
 
     _shaderProgram =
         Graphics.CreateShaderProgram();
+    
+    
 
     _shaderProgram.Attach(_vertexShader);
     _shaderProgram.Attach(_fragmentShader);
@@ -295,28 +307,33 @@ public override void OnWindowEvent(
 public override void Render()
 {
     Graphics!.Clear(
-        new SA2DGE.Engine.Math.Color(
+        new Color(
             20,
             20,
             30,
             255));
 
-    Graphics.Commands!.SetVertexArray(
-        _vertexArray!);
+    _renderer!.BeginFrame();
 
-    Graphics.Commands.SetShaderProgram(
-        _shaderProgram!);
+    _renderer.DrawRectangle(
+        new Vector2(640.0f, 360.0f),
+        new Vector2(400.0f, 250.0f),
+        new Color(
+            255,
+            0,
+            0,
+            255));
 
-    Graphics.Commands.DrawIndexed(
-        indexCount: 6);
-
-    Graphics.Commands.Reset();
-
-    Graphics.Present();
+    _renderer.EndFrame();
+    _renderer.Present();
 }
 
 public override void Shutdown()
 {
+    
+    _renderer?.Shutdown();
+    _renderer?.Dispose();
+    _renderer = null;
     _shaderProgram?.Dispose();
     _shaderProgram = null;
 

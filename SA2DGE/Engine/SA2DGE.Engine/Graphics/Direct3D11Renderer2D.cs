@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace SA2DGE.Engine.Graphics;
 
-internal sealed class Direct3D11Renderer2D : Renderer2D
+public sealed class Direct3D11Renderer2D : Renderer2D
 {
     private readonly GraphicsBackend _graphics;
 
@@ -16,7 +16,9 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
     private Shader? _rectangleVertexShader;
     private Shader? _rectangleFragmentShader;
     private ShaderProgram? _rectangleShaderProgram;
+
     private ConstantBuffer? _rectangleTransformBuffer;
+    private ConstantBuffer? _rectangleColorBuffer;
 
     private bool _rectanglePipelineInitialized;
 
@@ -25,10 +27,12 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
     public Direct3D11Renderer2D(GraphicsBackend graphics)
     {
         ArgumentNullException.ThrowIfNull(graphics);
+
         _graphics = graphics;
     }
 
-    public override string Name => "SA2DGE Direct3D11 Renderer2D";
+    public override string Name =>
+        "SA2DGE Direct3D11 Renderer2D";
 
     protected override void OnInitialize()
     {
@@ -44,16 +48,24 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
                 "Graphics resources are not available.");
         }
 
-        _projectionMatrix = Matrix4.CreateOrthographic(
+        _projectionMatrix = Matrix4.CreateOrthographicOffCenter(
+            0.0f,
             _graphics.Width,
             _graphics.Height,
+            0.0f,
             -1.0f,
             1.0f);
 
         _rectangleTransformBuffer =
             resources.CreateConstantBuffer(64);
 
+        _rectangleColorBuffer =
+            resources.CreateConstantBuffer(16);
+
         CreateRectanglePipeline();
+
+        Console.WriteLine(
+            "Stage 3 Renderer2D initialized.");
     }
 
     protected override void BeginFrame2D()
@@ -110,6 +122,11 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
 
     protected override void OnShutdown()
     {
+        _graphics.Commands?.Reset();
+
+        _rectangleColorBuffer?.Dispose();
+        _rectangleColorBuffer = null;
+
         _rectangleTransformBuffer?.Dispose();
         _rectangleTransformBuffer = null;
 
@@ -168,26 +185,47 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
         Vertex[] vertices =
         {
             new Vertex(
-                -0.5f, -0.5f, 0.0f,
-                1.0f, 1.0f, 1.0f, 1.0f),
+                -0.5f,
+                -0.5f,
+                0.0f,
+                1.0f,
+                1.0f,
+                1.0f,
+                1.0f),
 
             new Vertex(
-                 0.5f, -0.5f, 0.0f,
-                1.0f, 1.0f, 1.0f, 1.0f),
+                 0.5f,
+                -0.5f,
+                0.0f,
+                1.0f,
+                1.0f,
+                1.0f,
+                1.0f),
 
             new Vertex(
-                -0.5f,  0.5f, 0.0f,
-                1.0f, 1.0f, 1.0f, 1.0f),
+                -0.5f,
+                 0.5f,
+                0.0f,
+                1.0f,
+                1.0f,
+                1.0f,
+                1.0f),
 
             new Vertex(
-                 0.5f,  0.5f, 0.0f,
-                1.0f, 1.0f, 1.0f, 1.0f)
+                 0.5f,
+                 0.5f,
+                0.0f,
+                1.0f,
+                1.0f,
+                1.0f,
+                1.0f)
         };
 
+        // Winding order chosen for the Direct3D11 default rasterizer.
         uint[] indices =
         {
-            0, 1, 2,
-            2, 1, 3
+            0, 2, 1,
+            2, 3, 1
         };
 
         _rectangleVertexBuffer =
@@ -229,38 +267,44 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
                 12));
 
         const string vertexShaderSource = """
-            cbuffer TransformBuffer : register(b0)
-            {
-                float4x4 Transform;
-            };
-
-            struct VSInput
-            {
-                float3 Position : POSITION;
-                float4 Color : COLOR;
-            };
-
-            struct VSOutput
-            {
-                float4 Position : SV_POSITION;
-                float4 Color : COLOR;
-            };
-
-            VSOutput main(VSInput input)
-            {
-                VSOutput output;
-
-                output.Position = mul(
-                    float4(input.Position, 1.0f),
-                    Transform);
-
-                output.Color = input.Color;
-
-                return output;
-            }
-            """;
+                                          cbuffer TransformBuffer : register(b0)
+                                          {
+                                              row_major float4x4 Transform;
+                                          };
+                                          
+                                          struct VSInput
+                                          {
+                                              float3 Position : POSITION;
+                                              float4 Color : COLOR;
+                                          };
+                                          
+                                          struct VSOutput
+                                          {
+                                              float4 Position : SV_POSITION;
+                                              float4 Color : COLOR;
+                                          };
+                                          
+                                          VSOutput main(VSInput input)
+                                          {
+                                              VSOutput output;
+                                          
+                                              output.Position =
+                                                  mul(
+                                                      Transform,
+                                                      float4(input.Position, 1.0f));
+                                          
+                                              output.Color = input.Color;
+                                          
+                                              return output;
+                                          }
+                                          """;
 
         const string fragmentShaderSource = """
+            cbuffer ColorBuffer : register(b1)
+            {
+                float4 Color;
+            };
+
             struct PSInput
             {
                 float4 Position : SV_POSITION;
@@ -269,7 +313,7 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
 
             float4 main(PSInput input) : SV_TARGET
             {
-                return input.Color;
+                return input.Color * Color;
             }
             """;
 
@@ -302,36 +346,20 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
         _rectanglePipelineInitialized = true;
     }
 
-    
-    private void UpdateRectangleTransform(
-        RenderCommand command)
+    private void UpdateRectangleTransform(RenderCommand command)
     {
         if (_rectangleTransformBuffer is null)
-        {
             throw new InvalidOperationException(
                 "The rectangle transform buffer is not initialized.");
-        }
 
-        Matrix4 transform =
-            Matrix4.CreateScale(
-                new Vector3(
-                    command.Size.X,
-                    command.Size.Y,
-                    1.0f))
-            * Matrix4.CreateRotationZ(command.Rotation)
-            * Matrix4.CreateTranslation(
-                new Vector3(
-                    command.Position.X,
-                    command.Position.Y,
-                    0.0f))
-            * _projectionMatrix;
-        
+        // Temporary diagnostic transform.
+        // Produces a rectangle directly in clip space.
         float[] values =
         {
-            transform.M11, transform.M12, transform.M13, transform.M14,
-            transform.M21, transform.M22, transform.M23, transform.M24,
-            transform.M31, transform.M32, transform.M33, transform.M34,
-            transform.M41, transform.M42, transform.M43, transform.M44
+            0.5f, 0.0f, 0.0f, 0.0f,
+            0.0f, 0.5f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
         };
 
         ReadOnlySpan<byte> bytes =
@@ -339,18 +367,52 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
 
         _rectangleTransformBuffer.SetData(bytes);
     }
-    
-    private void ExecuteRectangle(RenderCommand command)
+
+    private void UpdateRectangleColor(
+        RenderCommand command)
+    {
+        if (_rectangleColorBuffer is null)
+        {
+            throw new InvalidOperationException(
+                "The rectangle color buffer is not initialized.");
+        }
+
+        float[] values =
+        {
+            command.Color.R,
+            command.Color.G,
+            command.Color.B,
+            command.Color.A
+        };
+
+        ReadOnlySpan<byte> bytes =
+            MemoryMarshal.AsBytes<float>(values);
+
+        _rectangleColorBuffer.SetData(bytes);
+    }
+
+    private void ExecuteRectangle(
+        RenderCommand command)
     {
         if (!_rectanglePipelineInitialized ||
             _rectangleVertexArray is null ||
             _rectangleShaderProgram is null ||
             _rectangleTransformBuffer is null ||
+            _rectangleColorBuffer is null ||
             _graphics.Commands is null)
         {
             throw new InvalidOperationException(
                 "The rectangle rendering pipeline is not initialized.");
         }
+
+        Console.WriteLine(
+            $"RECTANGLE DRAW: X={command.Position.X}, " +
+            $"Y={command.Position.Y}, " +
+            $"W={command.Size.X}, " +
+            $"H={command.Size.Y}");
+
+        UpdateRectangleTransform(command);
+        UpdateRectangleColor(command);
 
         _graphics.Commands.SetVertexArray(
             _rectangleVertexArray);
@@ -362,28 +424,36 @@ internal sealed class Direct3D11Renderer2D : Renderer2D
             0,
             _rectangleTransformBuffer);
 
+        _graphics.Commands.SetPixelConstantBuffer(
+            1,
+            _rectangleColorBuffer);
+
         _graphics.Commands.DrawIndexed(6);
     }
 
-    private static void ExecuteSprite(RenderCommand command)
+    private static void ExecuteSprite(
+        RenderCommand command)
     {
         throw new NotImplementedException(
             "Sprite rendering is not implemented yet.");
     }
 
-    private static void ExecuteCircle(RenderCommand command)
+    private static void ExecuteCircle(
+        RenderCommand command)
     {
         throw new NotImplementedException(
             "Circle rendering is not implemented yet.");
     }
 
-    private static void ExecuteLine(RenderCommand command)
+    private static void ExecuteLine(
+        RenderCommand command)
     {
         throw new NotImplementedException(
             "Line rendering is not implemented yet.");
     }
 
-    private static void ExecuteText(RenderCommand command)
+    private static void ExecuteText(
+        RenderCommand command)
     {
         throw new NotImplementedException(
             "Text rendering is not implemented yet.");

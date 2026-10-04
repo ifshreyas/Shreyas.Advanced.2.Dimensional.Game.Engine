@@ -43,6 +43,24 @@ internal sealed class Direct3D11GraphicsCommands : GraphicsCommands
             checked((uint)slot),
             d3dBuffer.NativeBuffer);
     }
+    
+    public override void SetPixelConstantBuffer(
+        int slot,
+        ConstantBuffer buffer)
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+
+        if (buffer is not Direct3D11ConstantBuffer d3dBuffer)
+        {
+            throw new ArgumentException(
+                "The constant buffer must be a Direct3D11 constant buffer.",
+                nameof(buffer));
+        }
+
+        _context.PSSetConstantBuffer(
+            checked((uint)slot),
+            d3dBuffer.NativeBuffer);
+    }
 
     protected override void SetShaderProgramBackend(
         ShaderProgram shaderProgram)
@@ -87,11 +105,6 @@ internal sealed class Direct3D11GraphicsCommands : GraphicsCommands
 
     protected override void ResetBackend()
     {
-        _shaderProgram?.StopUsing();
-        _vertexArray?.Unbind();
-
-        _shaderProgram = null;
-        _vertexArray = null;
     }
 
     protected override void DisposeBackend()

@@ -20,6 +20,10 @@ public abstract class GraphicsCommands
     public abstract void SetVertexConstantBuffer(
         int slot,
         ConstantBuffer buffer);
+    
+    public abstract void SetPixelConstantBuffer(
+        int slot,
+        ConstantBuffer buffer);
 
     public void SetShaderProgram(ShaderProgram shaderProgram)
     {
