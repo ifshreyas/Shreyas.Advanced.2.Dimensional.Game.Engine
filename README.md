@@ -20,7 +20,7 @@ SA2DGE is being designed as a layered system because a game engine is not a sing
 
 The long-term purpose of SA2DGE is therefore not simply to produce a library that can draw sprites, but to build a complete understanding of the relationship between a game, an engine, an operating system, and computer hardware. The project is being developed from the low-level foundations upward so that each abstraction is backed by an understanding of what happens underneath it, allowing the engine to gradually move from runtime and platform infrastructure toward actual game-facing functionality.
 
-SA2DGE is currently designed around **C# and .NET**, with **Windows and Win32** providing the initial platform layer and **Direct3D 11 through Vortice** providing the graphics backend. These technologies form the current implementation foundation, while the architecture is being kept sufficiently separated so that platform and graphics-specific code can remain isolated from the higher-level engine systems wherever practical.
+SA2DGE is currently designed around **C# and .NET**, with **Windows and Win32** providing the initial platform layer and **Direct3D 11 through Vortice** providing the graphics backend. These technologies form the current implementation foundation, while the architecture is being kept sufficiently separated so that platform- and graphics-specific code can remain isolated from the higher-level engine systems wherever practical.
 
 The project is intentionally being developed incrementally, with each subsystem being understood, implemented, connected to the runtime, tested, and refined before the engine moves further upward. The goal is to eventually reach a point where creating a 2D game with SA2DGE feels simple at the game level while the engine underneath it handles the complex work of window management, input, timing, graphics, resources, rendering, scenes, physics, audio, and other supporting systems.
 
@@ -47,4 +47,4 @@ SA2DGE is currently being developed primarily with **C# and .NET**, providing th
 
 ## 📖 Development Log
 
-The main README intentionally describes **what SA2DGE is, what it is designed to do, and how the engine works at a high level**, rather than documenting every implementation milestone. If you want to see what was built, changed, fixed, tested, and validated during each development stage, please refer to the **Development Log**, where the progress of SA2DGE is documented stage by stage.
+The main README intentionally describes **what SA2DGE is, what it is designed to do, and how the engine works at a high level**, rather than documenting every implementation milestone. If you want to see what was built, changed, fixed, tested, and validated during each development stage, please refer to the **Development Log**, where the progress of SA2DGE is documented stage by stage it helps to understand the real work behind the project.
