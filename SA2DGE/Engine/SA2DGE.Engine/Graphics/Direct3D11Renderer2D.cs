@@ -194,7 +194,7 @@ public sealed class Direct3D11Renderer2D : Renderer2D
                 1.0f),
 
             new Vertex(
-                 0.5f,
+                0.5f,
                 -0.5f,
                 0.0f,
                 1.0f,
@@ -204,7 +204,7 @@ public sealed class Direct3D11Renderer2D : Renderer2D
 
             new Vertex(
                 -0.5f,
-                 0.5f,
+                0.5f,
                 0.0f,
                 1.0f,
                 1.0f,
@@ -212,8 +212,8 @@ public sealed class Direct3D11Renderer2D : Renderer2D
                 1.0f),
 
             new Vertex(
-                 0.5f,
-                 0.5f,
+                0.5f,
+                0.5f,
                 0.0f,
                 1.0f,
                 1.0f,
@@ -221,11 +221,15 @@ public sealed class Direct3D11Renderer2D : Renderer2D
                 1.0f)
         };
 
-        // Winding order chosen for the Direct3D11 default rasterizer.
+        // The orthographic projection flips Y because the
+        // 2D coordinate system starts at the top-left.
+        //
+        // Therefore the triangle winding must be reversed
+        // for Direct3D11's default clockwise front-face rule.
         uint[] indices =
         {
-            0, 2, 1,
-            2, 3, 1
+            0, 1, 2,
+            2, 1, 3
         };
 
         _rectangleVertexBuffer =
@@ -267,55 +271,50 @@ public sealed class Direct3D11Renderer2D : Renderer2D
                 12));
 
         const string vertexShaderSource = """
-                                          cbuffer TransformBuffer : register(b0)
-                                          {
-                                              row_major float4x4 Transform;
-                                          };
-                                          
-                                          struct VSInput
-                                          {
-                                              float3 Position : POSITION;
-                                              float4 Color : COLOR;
-                                          };
-                                          
-                                          struct VSOutput
-                                          {
-                                              float4 Position : SV_POSITION;
-                                              float4 Color : COLOR;
-                                          };
-                                          
-                                          VSOutput main(VSInput input)
-                                          {
-                                              VSOutput output;
-                                          
-                                              output.Position =
-                                                  mul(
-                                                      Transform,
-                                                      float4(input.Position, 1.0f));
-                                          
-                                              output.Color = input.Color;
-                                          
-                                              return output;
-                                          }
-                                          """;
-
-        const string fragmentShaderSource = """
-            cbuffer ColorBuffer : register(b1)
+            cbuffer TransformBuffer : register(b0)
             {
-                float4 Color;
+                float4x4 Transform;
             };
 
-            struct PSInput
+            struct VSInput
+            {
+                float3 Position : POSITION;
+                float4 Color : COLOR;
+            };
+
+            struct VSOutput
             {
                 float4 Position : SV_POSITION;
                 float4 Color : COLOR;
             };
 
-            float4 main(PSInput input) : SV_TARGET
+            VSOutput main(VSInput input)
             {
-                return input.Color * Color;
+                VSOutput output;
+
+                output.Position =
+                    mul(
+                        float4(input.Position, 1.0f),
+                        Transform);
+
+                output.Color = input.Color;
+
+                return output;
             }
             """;
+
+        const string fragmentShaderSource = """
+                                            struct PSInput
+                                            {
+                                                float4 Position : SV_POSITION;
+                                                float4 Color : COLOR;
+                                            };
+
+                                            float4 main(PSInput input) : SV_TARGET
+                                            {
+                                                return float4(1.0f, 0.0f, 0.0f, 1.0f);
+                                            }
+                                            """;
 
         _rectangleVertexShader =
             _graphics.CreateVertexShader(
@@ -346,26 +345,59 @@ public sealed class Direct3D11Renderer2D : Renderer2D
         _rectanglePipelineInitialized = true;
     }
 
-    private void UpdateRectangleTransform(RenderCommand command)
+    private void UpdateRectangleTransform(
+        RenderCommand command)
     {
         if (_rectangleTransformBuffer is null)
+        {
             throw new InvalidOperationException(
                 "The rectangle transform buffer is not initialized.");
+        }
 
-        // Temporary diagnostic transform.
-        // Produces a rectangle directly in clip space.
+        Matrix4 transform =
+            _projectionMatrix
+            * Matrix4.CreateTranslation(
+                new Vector3(
+                    command.Position.X,
+                    command.Position.Y,
+                    0.0f))
+            * Matrix4.CreateRotationZ(
+                command.Rotation)
+            * Matrix4.CreateScale(
+                new Vector3(
+                    command.Size.X,
+                    command.Size.Y,
+                    1.0f));
+
         float[] values =
         {
-            0.5f, 0.0f, 0.0f, 0.0f,
-            0.0f, 0.5f, 0.0f, 0.0f,
-            0.0f, 0.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 1.0f
+            transform.M11,
+            transform.M12,
+            transform.M13,
+            transform.M14,
+
+            transform.M21,
+            transform.M22,
+            transform.M23,
+            transform.M24,
+
+            transform.M31,
+            transform.M32,
+            transform.M33,
+            transform.M34,
+
+            transform.M41,
+            transform.M42,
+            transform.M43,
+            transform.M44
         };
 
         ReadOnlySpan<byte> bytes =
-            MemoryMarshal.AsBytes<float>(values);
+            MemoryMarshal.AsBytes<float>(
+                values);
 
-        _rectangleTransformBuffer.SetData(bytes);
+        _rectangleTransformBuffer.SetData(
+            bytes);
     }
 
     private void UpdateRectangleColor(
@@ -379,16 +411,18 @@ public sealed class Direct3D11Renderer2D : Renderer2D
 
         float[] values =
         {
-            command.Color.R,
-            command.Color.G,
-            command.Color.B,
-            command.Color.A
+            command.Color.R / 255.0f,
+            command.Color.G / 255.0f,
+            command.Color.B / 255.0f,
+            command.Color.A / 255.0f
         };
 
         ReadOnlySpan<byte> bytes =
-            MemoryMarshal.AsBytes<float>(values);
+            MemoryMarshal.AsBytes<float>(
+                values);
 
-        _rectangleColorBuffer.SetData(bytes);
+        _rectangleColorBuffer.SetData(
+            bytes);
     }
 
     private void ExecuteRectangle(
