@@ -1,5 +1,6 @@
 ﻿using SA2DGE.Engine.Graphics.Buffers;
 using SA2DGE.Engine.Graphics.Shaders;
+using SA2DGE.Engine.Graphics.Textures;
 using SA2DGE.Engine.Math;
 using System.Runtime.InteropServices;
 
@@ -21,6 +22,22 @@ public sealed class Direct3D11Renderer2D : Renderer2D
     private ConstantBuffer? _rectangleColorBuffer;
 
     private bool _rectanglePipelineInitialized;
+    
+    
+    // Sprite pipeline resources
+    private VertexBuffer? _spriteVertexBuffer;
+    private IndexBuffer? _spriteIndexBuffer;
+    private VertexArray? _spriteVertexArray;
+
+    private Shader? _spriteVertexShader;
+    private Shader? _spriteFragmentShader;
+    private ShaderProgram? _spriteShaderProgram;
+
+    private ConstantBuffer? _spriteTransformBuffer;
+    private ConstantBuffer? _spriteColorBuffer;
+
+    private bool _spritePipelineInitialized;
+
 
     private Matrix4 _projectionMatrix;
 
@@ -63,6 +80,8 @@ public sealed class Direct3D11Renderer2D : Renderer2D
             resources.CreateConstantBuffer(16);
 
         CreateRectanglePipeline();
+        
+        CreateSpritePipeline();
 
         Console.WriteLine(
             "Stage 3 Renderer2D initialized.");
@@ -149,6 +168,34 @@ public sealed class Direct3D11Renderer2D : Renderer2D
         _rectangleVertexBuffer = null;
 
         _rectanglePipelineInitialized = false;
+        
+        
+        _spriteColorBuffer?.Dispose();
+        _spriteColorBuffer = null;
+
+        _spriteTransformBuffer?.Dispose();
+        _spriteTransformBuffer = null;
+
+        _spriteShaderProgram?.Dispose();
+        _spriteShaderProgram = null;
+
+        _spriteVertexShader?.Dispose();
+        _spriteVertexShader = null;
+
+        _spriteFragmentShader?.Dispose();
+        _spriteFragmentShader = null;
+
+        _spriteVertexArray?.Dispose();
+        _spriteVertexArray = null;
+
+        _spriteIndexBuffer?.Dispose();
+        _spriteIndexBuffer = null;
+
+        _spriteVertexBuffer?.Dispose();
+        _spriteVertexBuffer = null;
+
+        _spritePipelineInitialized = false;
+
     }
 
     private void CreateRectanglePipeline()
@@ -349,6 +396,173 @@ public sealed class Direct3D11Renderer2D : Renderer2D
 
         _rectanglePipelineInitialized = true;
     }
+    
+    
+    private void CreateSpritePipeline()
+    {
+        if (_spritePipelineInitialized)
+            return;
+
+        if (_graphics.Resources is not GraphicsResources resources)
+            throw new InvalidOperationException(
+                "Graphics resources are not available.");
+
+        if (_graphics.Shaders is null)
+            throw new InvalidOperationException(
+                "Graphics shaders are not available.");
+
+        _spriteTransformBuffer =
+            resources.CreateConstantBuffer(64);
+
+        _spriteColorBuffer =
+            resources.CreateConstantBuffer(16);
+
+        // Position (3 floats) + Color (4 floats) + UV (2 floats).
+        // Total stride: 36 bytes.
+        
+        SpriteVertex[] vertices =
+        {
+            // Top-left
+            new SpriteVertex(
+                -0.5f, -0.5f, 0.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                0.0f, 0.0f),
+
+            // Top-right
+            new SpriteVertex(
+                0.5f, -0.5f, 0.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 0.0f),
+
+            // Bottom-left
+            new SpriteVertex(
+                -0.5f, 0.5f, 0.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                0.0f, 1.0f),
+
+            // Bottom-right
+            new SpriteVertex(
+                0.5f, 0.5f, 0.0f,
+                1.0f, 1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f)
+        };
+
+        uint[] indices =
+        {
+            0, 1, 2,
+            2, 1, 3
+        };
+
+        _spriteVertexBuffer =
+            _graphics.CreateVertexBuffer(vertices.Length, 36);
+        _spriteVertexBuffer.SetData(vertices);
+
+        _spriteIndexBuffer =
+            _graphics.CreateIndexBuffer(indices.Length);
+        _spriteIndexBuffer.SetData(indices);
+
+        _spriteVertexArray = _graphics.CreateVertexArray();
+        _spriteVertexArray.AddVertexBuffer(_spriteVertexBuffer);
+        _spriteVertexArray.SetIndexBuffer(_spriteIndexBuffer);
+
+        VertexLayout layout = new();
+
+        layout.Add(new VertexAttribute(
+            "POSITION", 0, VertexAttributeType.Float3, 0));
+
+        layout.Add(new VertexAttribute(
+            "COLOR", 0, VertexAttributeType.Float4, 12));
+
+        layout.Add(new VertexAttribute(
+            "TEXCOORD", 0, VertexAttributeType.Float2, 28));
+
+
+        layout.Add(new VertexAttribute(
+            "POSITION", 0, VertexAttributeType.Float3, 0));
+
+        layout.Add(new VertexAttribute(
+            "COLOR", 0, VertexAttributeType.Float4, 12));
+
+        layout.Add(new VertexAttribute(
+            "TEXCOORD", 0, VertexAttributeType.Float2, 28));
+
+        const string vertexShaderSource = """
+            cbuffer TransformBuffer : register(b0)
+            {
+                float4x4 Transform;
+            };
+
+            struct VSInput
+            {
+                float3 Position : POSITION;
+                float4 Color : COLOR;
+                float2 TexCoord : TEXCOORD;
+            };
+
+            struct VSOutput
+            {
+                float4 Position : SV_POSITION;
+                float4 Color : COLOR;
+                float2 TexCoord : TEXCOORD;
+            };
+
+            VSOutput main(VSInput input)
+            {
+                VSOutput output;
+                output.Position = mul(float4(input.Position, 1.0f), Transform);
+                output.Color = input.Color;
+                output.TexCoord = input.TexCoord;
+                return output;
+            }
+            """;
+
+        const string fragmentShaderSource = """
+            Texture2D SpriteTexture : register(t0);
+            SamplerState SpriteSampler : register(s0);
+
+            cbuffer ColorBuffer : register(b0)
+            {
+                float4 Color;
+            };
+
+            struct PSInput
+            {
+                float4 Position : SV_POSITION;
+                float4 Color : COLOR;
+                float2 TexCoord : TEXCOORD;
+            };
+
+            float4 main(PSInput input) : SV_TARGET
+            {
+                return SpriteTexture.Sample(
+                    SpriteSampler, input.TexCoord) * input.Color * Color;
+            }
+            """;
+
+        _spriteVertexShader =
+            _graphics.CreateVertexShader(vertexShaderSource);
+
+        _spriteFragmentShader =
+            _graphics.CreateFragmentShader(fragmentShaderSource);
+
+        _spriteVertexShader.Compile();
+        _spriteFragmentShader.Compile();
+
+        _spriteVertexArray.SetLayout(
+            layout,
+            _spriteVertexShader.Bytecode.Span);
+
+        _spriteShaderProgram = _graphics.CreateShaderProgram();
+        _spriteShaderProgram.Attach(_spriteVertexShader);
+        _spriteShaderProgram.Attach(_spriteFragmentShader);
+        _spriteShaderProgram.Link();
+
+        _spritePipelineInitialized = true;
+
+        Console.WriteLine("Sprite pipeline created.");
+        
+    }
+
 
     
     private void UpdateRectangleTransform(RenderCommand command)
@@ -396,6 +610,70 @@ public sealed class Direct3D11Renderer2D : Renderer2D
 
         _rectangleTransformBuffer.SetData(bytes);
     }
+    
+    
+    private void UpdateSpriteTransform(
+        RenderCommand command)
+    {
+        if (_spriteTransformBuffer is null)
+        {
+            throw new InvalidOperationException(
+                "The sprite transform buffer is not initialized.");
+        }
+
+        Matrix4 scale =
+            Matrix4.CreateScale(
+                new Vector3(
+                    command.Size.X,
+                    command.Size.Y,
+                    1.0f));
+
+        Matrix4 rotation =
+            Matrix4.CreateRotationZ(
+                command.Rotation);
+
+        Matrix4 translation =
+            Matrix4.CreateTranslation(
+                new Vector3(
+                    command.Position.X,
+                    command.Position.Y,
+                    0.0f));
+
+        Matrix4 transform =
+            _projectionMatrix
+            * translation
+            * rotation
+            * scale;
+
+        float[] values =
+        {
+            transform.M11,
+            transform.M12,
+            transform.M13,
+            transform.M14,
+
+            transform.M21,
+            transform.M22,
+            transform.M23,
+            transform.M24,
+
+            transform.M31,
+            transform.M32,
+            transform.M33,
+            transform.M34,
+
+            transform.M41,
+            transform.M42,
+            transform.M43,
+            transform.M44
+        };
+
+        ReadOnlySpan<byte> bytes =
+            MemoryMarshal.AsBytes<float>(values);
+
+        _spriteTransformBuffer.SetData(bytes);
+    }
+
 
 
     private void UpdateRectangleColor(
@@ -465,11 +743,60 @@ public sealed class Direct3D11Renderer2D : Renderer2D
         _graphics.Commands.DrawIndexed(6);
     }
 
-    private static void ExecuteSprite(
-        RenderCommand command)
+    private void ExecuteSprite(RenderCommand command)
     {
-        throw new NotImplementedException(
-            "Sprite rendering is not implemented yet.");
+        if (!_spritePipelineInitialized ||
+            _spriteVertexArray is null ||
+            _spriteShaderProgram is null ||
+            _spriteTransformBuffer is null ||
+            _spriteColorBuffer is null ||
+            _graphics.Commands is null)
+        {
+            throw new InvalidOperationException(
+                "The sprite rendering pipeline is not initialized.");
+        }
+
+        if (command.Resource is not Texture2D texture)
+        {
+            throw new ArgumentException(
+                "A sprite render command must contain a Texture2D resource.",
+                nameof(command));
+        }
+
+        UpdateSpriteTransform(command);
+
+        float[] color =
+        {
+            command.Color.R,
+            command.Color.G,
+            command.Color.B,
+            command.Color.A
+        };
+
+        ReadOnlySpan<byte> colorBytes =
+            MemoryMarshal.AsBytes<float>(color);
+
+        _spriteColorBuffer.SetData(colorBytes);
+
+        texture.Bind(0);
+
+        _graphics.Commands.SetVertexArray(
+            _spriteVertexArray);
+
+        _graphics.Commands.SetShaderProgram(
+            _spriteShaderProgram);
+
+        _graphics.Commands.SetVertexConstantBuffer(
+            0,
+            _spriteTransformBuffer);
+
+        _graphics.Commands.SetPixelConstantBuffer(
+            0,
+            _spriteColorBuffer);
+
+        _graphics.Commands.DrawIndexed(6);
+
+        texture.Unbind();
     }
 
     private static void ExecuteCircle(
@@ -523,4 +850,45 @@ public sealed class Direct3D11Renderer2D : Renderer2D
             ColorA = colorA;
         }
     }
+    
+    
+    private readonly struct SpriteVertex
+    {
+        public readonly float PositionX;
+        public readonly float PositionY;
+        public readonly float PositionZ;
+
+        public readonly float ColorR;
+        public readonly float ColorG;
+        public readonly float ColorB;
+        public readonly float ColorA;
+
+        public readonly float U;
+        public readonly float V;
+
+        public SpriteVertex(
+            float positionX,
+            float positionY,
+            float positionZ,
+            float colorR,
+            float colorG,
+            float colorB,
+            float colorA,
+            float u,
+            float v)
+        {
+            PositionX = positionX;
+            PositionY = positionY;
+            PositionZ = positionZ;
+
+            ColorR = colorR;
+            ColorG = colorG;
+            ColorB = colorB;
+            ColorA = colorA;
+
+            U = u;
+            V = v;
+        }
+    }
+
 }
