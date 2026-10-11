@@ -4,7 +4,7 @@ Today SA2DGE completed the core runtime foundation from **input through platform
 
 The runtime lifecycle was also fully integrated through **Engine → Application → GameLoop → Game**, with fixed 60 Hz updates, input processing, window event processing, rendering, shutdown, and resource cleanup. The Windows platform layer now handles native Win32 window creation, close, resize, minimize, maximize, restore, native handles, and window state tracking. The restore-event issue was fixed so restored windows correctly report their actual dimensions instead of `0x0`.
 
-The **Direct3D 11 graphics backend** is now successfully integrated with the runtime. D3D11 device creation, flip-model swap chain creation, basic rendering/present, and shutdown were verified without duplicate initialization. The complete runtime smoke test successfully demonstrated the full path from engine startup through input, window events, D3D11 rendering, and clean done shutdown.
+The **Direct3D 11 graphics backend** is now successfully integrated with the runtime. D3D11 device creation, flip-model swap chain creation, basic rendering/present, and shutdown were verified without duplicate initialization. The complete runtime smoke test successfully demonstrated the full path from engine startup through input, window events, D3D11 rendering, and clean it then ,shutdown.
 
 
 ## 📅 Stage 2.2 — Windows Platform Backend
