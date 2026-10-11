@@ -310,9 +310,14 @@ public sealed class Direct3D11Renderer2D : Renderer2D
                                                 float4 Color : COLOR;
                                             };
 
+                                            cbuffer ColorBuffer : register(b0)
+                                            {
+                                                float4 Color;
+                                            };
+
                                             float4 main(PSInput input) : SV_TARGET
                                             {
-                                                return float4(1.0f, 0.0f, 0.0f, 1.0f);
+                                                return input.Color * Color;
                                             }
                                             """;
 
@@ -345,8 +350,8 @@ public sealed class Direct3D11Renderer2D : Renderer2D
         _rectanglePipelineInitialized = true;
     }
 
-    private void UpdateRectangleTransform(
-        RenderCommand command)
+    
+    private void UpdateRectangleTransform(RenderCommand command)
     {
         if (_rectangleTransformBuffer is null)
         {
@@ -354,51 +359,44 @@ public sealed class Direct3D11Renderer2D : Renderer2D
                 "The rectangle transform buffer is not initialized.");
         }
 
-        Matrix4 transform =
-            _projectionMatrix
-            * Matrix4.CreateTranslation(
-                new Vector3(
-                    command.Position.X,
-                    command.Position.Y,
-                    0.0f))
-            * Matrix4.CreateRotationZ(
-                command.Rotation)
-            * Matrix4.CreateScale(
-                new Vector3(
-                    command.Size.X,
-                    command.Size.Y,
-                    1.0f));
+        if (_graphics.Width <= 0 || _graphics.Height <= 0)
+        {
+            throw new InvalidOperationException(
+                "Renderer dimensions must be positive.");
+        }
 
+        float cos = MathF.Cos(command.Rotation);
+        float sin = MathF.Sin(command.Rotation);
+
+        float sx = command.Size.X;
+        float sy = command.Size.Y;
+
+        float screenWidth = _graphics.Width;
+        float screenHeight = _graphics.Height;
+
+        // Row-major CPU matrix. The shader below uses mul(vector, matrix).
         float[] values =
         {
-            transform.M11,
-            transform.M12,
-            transform.M13,
-            transform.M14,
+            2.0f * cos * sx / screenWidth,
+            -2.0f * sin * sy / screenWidth,
+            0.0f,
+            2.0f * command.Position.X / screenWidth - 1.0f,
 
-            transform.M21,
-            transform.M22,
-            transform.M23,
-            transform.M24,
+            -2.0f * sin * sx / screenHeight,
+            -2.0f * cos * sy / screenHeight,
+            0.0f,
+            1.0f - 2.0f * command.Position.Y / screenHeight,
 
-            transform.M31,
-            transform.M32,
-            transform.M33,
-            transform.M34,
-
-            transform.M41,
-            transform.M42,
-            transform.M43,
-            transform.M44
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 1.0f
         };
 
         ReadOnlySpan<byte> bytes =
-            MemoryMarshal.AsBytes<float>(
-                values);
+            MemoryMarshal.AsBytes<float>(values);
 
-        _rectangleTransformBuffer.SetData(
-            bytes);
+        _rectangleTransformBuffer.SetData(bytes);
     }
+
 
     private void UpdateRectangleColor(
         RenderCommand command)
@@ -409,13 +407,15 @@ public sealed class Direct3D11Renderer2D : Renderer2D
                 "The rectangle color buffer is not initialized.");
         }
 
+        
         float[] values =
         {
-            command.Color.R / 255.0f,
-            command.Color.G / 255.0f,
-            command.Color.B / 255.0f,
-            command.Color.A / 255.0f
+            command.Color.R,
+            command.Color.G,
+            command.Color.B,
+            command.Color.A
         };
+
 
         ReadOnlySpan<byte> bytes =
             MemoryMarshal.AsBytes<float>(
@@ -459,7 +459,7 @@ public sealed class Direct3D11Renderer2D : Renderer2D
             _rectangleTransformBuffer);
 
         _graphics.Commands.SetPixelConstantBuffer(
-            1,
+            0,
             _rectangleColorBuffer);
 
         _graphics.Commands.DrawIndexed(6);
