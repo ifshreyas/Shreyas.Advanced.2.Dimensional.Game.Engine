@@ -37,19 +37,23 @@ public abstract class Renderer2D : Renderer
                 texture));
     }
 
+    
     public void DrawRectangle(
         Vector2 position,
         Vector2 size,
         Color color,
-        int layer = 0)
+        int layer = 0,
+        float rotation = 0.0f)
     {
         Draw(
             RenderCommand.Rectangle(
                 position,
                 size,
                 color,
-                layer));
+                layer,
+                rotation));
     }
+
 
     public void DrawCircle(
         Vector2 position,

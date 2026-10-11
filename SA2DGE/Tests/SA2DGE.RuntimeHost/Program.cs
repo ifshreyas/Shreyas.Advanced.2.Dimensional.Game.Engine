@@ -323,26 +323,27 @@ public override void Render()
             0,
             0,
             255));
+    // Layer 0: drawn first.
     _renderer.DrawRectangle(
-        new Vector2(250.0f, 180.0f),
-        new Vector2(150.0f, 100.0f),
-        new Color(1.0f, 0.0f, 0.0f, 1.0f));
+        new Vector2(500.0f, 300.0f),
+        new Vector2(300.0f, 180.0f),
+        new Color(1.0f, 0.0f, 0.0f, 1.0f),
+        layer: 0);
 
+// Layer 1: drawn over the red rectangle.
     _renderer.DrawRectangle(
-        new Vector2(500.0f, 180.0f),
-        new Vector2(150.0f, 100.0f),
-        new Color(0.0f, 1.0f, 0.0f, 1.0f));
+        new Vector2(500.0f, 300.0f),
+        new Vector2(220.0f, 130.0f),
+        new Color(0.0f, 1.0f, 0.0f, 1.0f),
+        layer: 1);
 
+// Layer 2: rotated and drawn on top.
     _renderer.DrawRectangle(
-        new Vector2(750.0f, 180.0f),
-        new Vector2(150.0f, 100.0f),
-        new Color(0.0f, 0.0f, 1.0f, 1.0f));
-
-    _renderer.DrawRectangle(
-        new Vector2(500.0f, 400.0f),
-        new Vector2(200.0f, 120.0f),
-        new Color(1.0f, 1.0f, 0.0f, 1.0f));
-
+        new Vector2(500.0f, 300.0f),
+        new Vector2(150.0f, 70.0f),
+        new Color(0.0f, 0.0f, 1.0f, 1.0f),
+        layer: 2,
+        rotation: 0.785398f);
 
     _renderer.EndFrame();
     _renderer.Present();

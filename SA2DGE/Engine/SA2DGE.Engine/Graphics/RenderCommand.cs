@@ -54,20 +54,23 @@ public readonly struct RenderCommand
             texture);
     }
 
+    
     public static RenderCommand Rectangle(
         Vector2 position,
         Vector2 size,
         Color color,
-        int layer = 0)
+        int layer = 0,
+        float rotation = 0.0f)
     {
         return new RenderCommand(
             RenderCommandType.Rectangle,
             position,
             size,
-            0.0f,
+            rotation,
             color,
             layer);
     }
+
 
     public static RenderCommand Circle(
         Vector2 position,
